@@ -94,7 +94,7 @@ $heroBackground = "img/concerto.jpg";
 
         <section class="section-block" id="eventi">
             <div class="section-heading">
-                <h2>Eventi in evidenza AAAAAAAAAAAA</h2>
+                <h2>Eventi in evidenza</h2>
                 <p>Seleziona un evento per vedere i dettagli e procedere con la prenotazione.</p>
             </div>
 
