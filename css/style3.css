@@ -1,0 +1,146 @@
+
+:root {
+  --color-primary: #0b5f97;
+  --color-primary-hover: #084c79;
+  --color-primary-soft: #eaf4fb;
+  --color-accent: #f39a05;
+  --color-bg: #f5f9fc;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f6fa;
+  --color-text: #163047;
+  --color-text-muted: #5f7486;
+  --color-border: #cfe0ec;
+  --shadow-sm: 0 4px 14px rgba(11, 95, 151, 0.08);
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+header {
+  background-color: var(--color-primary);
+  color: #fff;
+  padding: 1% 0;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+main {
+  padding: 2%;
+  max-width: 90%;
+  margin: 2% auto;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+header img {
+  justify-content: center;
+  height: 50px;
+}
+
+.form-group {
+  margin-bottom: 0.7%;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5%;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+select,
+input {
+  width: 100%;
+  padding: 1%;
+  margin-bottom: 1%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.4em;
+  background-color: #fff;
+  color: var(--color-text);
+  box-sizing: border-box;
+}
+
+button {
+  width: 100%;
+  padding: 1%;
+  background-color: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 0.4em;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #d98500;
+}
+
+footer {
+  text-align: center;
+  padding: 1% 0;
+  background-color: var(--color-primary);
+  color: #fff;
+  position: fixed;
+  width: 100%;
+  height: 7vh;
+  bottom: 0;
+}
+
+.container,
+.box {
+  flex: 1;
+  min-width: 48%;
+  margin-bottom: 20px;
+}
+
+.container {
+  padding: 5%;
+}
+
+.container h2,
+.box h2 {
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--color-primary);
+}
+
+.main-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+}
+
+table,
+th,
+td {
+  border: 1px solid var(--color-border);
+}
+
+th,
+td {
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+tr:nth-child(even) {
+  background-color: var(--color-surface-2);
+}

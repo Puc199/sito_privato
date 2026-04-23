@@ -1,0 +1,214 @@
+:root {
+  --color-primary: #0b5f97;
+  --color-primary-dark: #084c79;
+  --color-primary-hover: #084c79;
+  --color-accent: #f39a05;
+  --color-accent-dark: #d98500;
+  --color-bg: #edf3f8;
+  --color-surface: rgba(255, 255, 255, 0.96);
+  --color-surface-soft: #f8fbfe;
+  --color-text: #13293d;
+  --color-text-muted: #607487;
+  --color-border: #d9e6f0;
+  --shadow-sm: 0 8px 22px rgba(10, 52, 84, 0.08);
+  --shadow-md: 0 20px 45px rgba(10, 52, 84, 0.14);
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  color: var(--color-text);
+  background:
+    radial-gradient(circle at top left, rgba(11, 95, 151, 0.10), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(243, 154, 5, 0.12), transparent 24%),
+    linear-gradient(180deg, #edf3f8 0%, #f8fbfe 100%);
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 18px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-surface);
+  border: 1px solid rgba(217, 230, 240, 0.95);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 34px 30px 28px;
+  backdrop-filter: blur(8px);
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-brand img {
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 12px;
+}
+
+.login-brand h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #081f34;
+}
+
+.login-brand p {
+  margin: 10px auto 0;
+  max-width: 34ch;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  font-size: 0.98rem;
+}
+
+.login-form {
+  margin-top: 10px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  margin-top: 16px;
+  text-align: left;
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 0.96rem;
+}
+
+input {
+  display: block;
+  width: 100%;
+  padding: 14px 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--color-text);
+  font-size: 0.98rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+input::placeholder {
+  color: #8ca0b1;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(11, 95, 151, 0.10);
+  transform: translateY(-1px);
+}
+
+.wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 22px;
+}
+
+button {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(180deg, #f7a61b 0%, var(--color-accent) 100%);
+  box-shadow: 0 12px 24px rgba(243, 154, 5, 0.24);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+button:hover {
+  background: linear-gradient(180deg, #f0a000 0%, var(--color-accent-dark) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px rgba(243, 154, 5, 0.28);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.login-links {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.login-links a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.login-links a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.alert {
+  border-radius: 14px;
+  padding: 13px 14px;
+  margin-bottom: 18px;
+  font-weight: 700;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.alert-danger {
+  background: #fff1ef;
+  border: 1px solid #f1d1ca;
+  color: #c14937;
+}
+
+@media (max-width: 640px) {
+  .login-shell {
+    padding: 18px 14px;
+  }
+
+  .login-card {
+    padding: 26px 18px 22px;
+    border-radius: 20px;
+  }
+
+  .login-brand img {
+    width: 180px;
+  }
+
+  .login-brand h1 {
+    font-size: 1.7rem;
+  }
+
+  .login-brand p {
+    font-size: 0.95rem;
+  }
+
+  input,
+  button {
+    font-size: 16px;
+  }
+}
