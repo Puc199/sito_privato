@@ -1,294 +1,505 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['username'])) {
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit();
 }
 
-$username = $_SESSION['username'];
-$partitaId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$servername = "localhost";
+$db_username = "root";
+$db_password = "";
+$dbname = "EasyTicket";
 
-function getWalletBalance($username) {
-    $conn = new mysqli("localhost", "root", "", "sito");
-    if ($conn->connect_error) {
-        die("Connessione fallita: " . $conn->connect_error);
-    }
-    $stmt = $conn->prepare("SELECT saldo FROM utente WHERE username = ?");
+$conn = new mysqli($servername, $db_username, $db_password, $dbname);
+if ($conn->connect_error) {
+    die("Connessione fallita: " . $conn->connect_error);
+}
+
+$conn->set_charset("utf8mb4");
+
+$username = $_SESSION['username'] ?? 'Utente';
+$id_evento = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+if ($id_evento <= 0) {
+    die("Evento non valido.");
+}
+
+function getUserData($conn, $username) {
+    $stmt = $conn->prepare("SELECT id, username, saldo FROM utente WHERE username = ? LIMIT 1");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    $walletBalance = $row['saldo'];
-
+    $user = $result->fetch_assoc();
     $stmt->close();
-    $conn->close();
-    return $walletBalance;
+    return $user;
 }
 
-function getTicketPrices() {
-    $conn = new mysqli("localhost", "root", "", "sito");
-    if ($conn->connect_error) {
-        die("Connessione fallita: " . $conn->connect_error);
-    }
+function getEventoDettaglio($conn, $id_evento) {
+    $sql = "SELECT e.id, e.titolo, e.descrizione, e.data_evento, e.immagine, e.stato,
+                   c.nome AS categoria,
+                   l.nome AS luogo,
+                   l.citta
+            FROM evento e
+            JOIN categoria c ON e.id_categoria = c.id
+            JOIN luogo l ON e.id_luogo = l.id
+            WHERE e.id = ?
+            LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_evento);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $evento = $result->fetch_assoc();
+    $stmt->close();
+    return $evento;
+}
 
-    $prices = array();
-    $result = $conn->query("SELECT 'VIP' as sector, prezzo FROM vip UNION SELECT 'Tribuna', prezzo FROM tribuna UNION SELECT 'Curva', prezzo FROM curva");
+function getReplicheEvento($conn, $id_evento) {
+    $sql = "SELECT id, data_ora_inizio, data_ora_fine, stato
+            FROM replica_evento
+            WHERE id_evento = ?
+            ORDER BY data_ora_inizio ASC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_evento);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $repliche = [];
     while ($row = $result->fetch_assoc()) {
-        $prices[$row['sector']] = $row['prezzo'];
+        $repliche[] = $row;
     }
-
-    $conn->close();
-    return $prices;
-}
-
-function getMatchDetails($partitaId) {
-    $conn = new mysqli("localhost", "root", "", "sito");
-    if ($conn->connect_error) {
-        die("Connessione fallita: " . $conn->connect_error);
-    }
-
-    $stmt = $conn->prepare("
-        SELECT p.*,s2.nome AS nome_squadra_ospite 
-        FROM partita p
-        JOIN squadre s2 ON p.id_squadraOspite = s2.id
-        WHERE p.id = ?");
-    $stmt->bind_param("i", $partitaId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $matchDetails = $result->fetch_assoc();
-
     $stmt->close();
-    $conn->close();
-    return $matchDetails;
+    return $repliche;
 }
 
-function getAvailableSeats($partitaId) {
-    $conn = new mysqli("localhost", "root", "", "sito");
-    if ($conn->connect_error) {
-        die("Connessione fallita: " . $conn->connect_error);
-    }
-
-    $stmt = $conn->prepare("SELECT Posti_vip, Posti_tribuna, Posti_curva FROM partita WHERE id = ?");
-    $stmt->bind_param("i", $partitaId);
+function getSettoriReplica($conn, $id_replica) {
+    $sql = "SELECT es.id, es.id_evento, es.id_replica_evento, es.id_settore,
+                   es.prezzo, es.posti_totali, es.posti_disponibili,
+                   s.nome AS nome_settore
+            FROM evento_settore es
+            JOIN settore s ON es.id_settore = s.id
+            WHERE es.id_replica_evento = ?
+            ORDER BY es.prezzo ASC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_replica);
     $stmt->execute();
     $result = $stmt->get_result();
-    $seats = $result->fetch_assoc();
-
-    $stmt = $conn->prepare("SELECT posto, settore FROM biglietto WHERE ID_Partita = ?");
-    $stmt->bind_param("i", $partitaId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $occupiedSeats = [];
+    $settori = [];
     while ($row = $result->fetch_assoc()) {
-        $occupiedSeats[$row['settore']][] = $row['posto'];
+        $settori[] = $row;
+    }
+    $stmt->close();
+    return $settori;
+}
+
+function getPostiOccupati($conn, $id_evento_settore) {
+    $sql = "SELECT posto
+            FROM biglietto
+            WHERE id_evento_settore = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_evento_settore);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $posti = [];
+    while ($row = $result->fetch_assoc()) {
+        $posti[] = (int)$row['posto'];
+    }
+    $stmt->close();
+    return $posti;
+}
+
+function formatDataReplica($datetime) {
+    if (!$datetime) {
+        return '';
+    }
+    return date('d/m/Y H:i', strtotime($datetime));
+}
+
+$user = getUserData($conn, $username);
+if (!$user) {
+    die("Utente non trovato.");
+}
+
+$evento = getEventoDettaglio($conn, $id_evento);
+if (!$evento) {
+    die("Evento non trovato.");
+}
+
+$repliche = getReplicheEvento($conn, $id_evento);
+
+$id_replica = isset($_GET['replica']) ? (int)$_GET['replica'] : 0;
+if ($id_replica === 0 && !empty($repliche)) {
+    $id_replica = (int)$repliche[0]['id'];
+}
+
+$replicaSelezionata = null;
+foreach ($repliche as $replica) {
+    if ((int)$replica['id'] === $id_replica) {
+        $replicaSelezionata = $replica;
+        break;
+    }
+}
+
+$settori = [];
+if ($id_replica > 0) {
+    $settori = getSettoriReplica($conn, $id_replica);
+}
+
+$selected_settore_id = isset($_GET['settore']) ? (int)$_GET['settore'] : 0;
+$selectedSettore = null;
+$postiOccupati = [];
+
+foreach ($settori as $settore) {
+    if ((int)$settore['id'] === $selected_settore_id) {
+        $selectedSettore = $settore;
+        break;
+    }
+}
+
+if ($selectedSettore) {
+    $postiOccupati = getPostiOccupati($conn, $selected_settore_id);
+}
+
+$errore = "";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['azione']) && $_POST['azione'] === 'acquista') {
+    $id_evento_settore = (int)($_POST['id_evento_settore'] ?? 0);
+    $postiSelezionati = $_POST['posti'] ?? [];
+
+    if (!is_array($postiSelezionati)) {
+        $postiSelezionati = [];
     }
 
-    $stmt->close();
-    $conn->close();
+    $postiSelezionati = array_values(array_unique(array_map('intval', $postiSelezionati)));
+    $postiSelezionati = array_filter($postiSelezionati, fn($p) => $p > 0);
 
-    return ['available' => $seats, 'occupied' => $occupiedSeats];
-}
-
-$walletBalance = getWalletBalance($username);
-$prices = getTicketPrices();
-$matchDetails = getMatchDetails($partitaId);
-$seatsData = getAvailableSeats($partitaId);
-
-if (!$matchDetails) {
-    echo "Nessuna partita trovata con l'ID specificato.";
-    exit();
-}
-
-$allSeatsFull = ($seatsData['available']['Posti_vip'] == 0) && ($seatsData['available']['Posti_tribuna'] == 0) && ($seatsData['available']['Posti_curva'] == 0);
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $ticketPrice = isset($_POST['ticket_price']) ? floatval($_POST['ticket_price']) : 0;
-    $sector = $_POST['sector'];
-    $seat = intval($_POST['seat']);
-
-    if ($partitaId > 0 && $walletBalance >= $ticketPrice) {
-        $conn = new mysqli("localhost", "root", "", "sito");
-        if ($conn->connect_error) {
-            die("Connessione fallita: " . $conn->connect_error);
-        }
-
+    if ($id_evento_settore <= 0 || empty($postiSelezionati)) {
+        $errore = "Seleziona almeno un posto valido.";
+    } else {
         $conn->begin_transaction();
 
         try {
-            $stmt = $conn->prepare("SELECT id FROM utente WHERE username = ?");
-            $stmt->bind_param("s", $username);
+            $sqlSettore = "SELECT es.id, es.prezzo, es.posti_disponibili, es.posti_totali, s.nome AS nome_settore
+                           FROM evento_settore es
+                           JOIN settore s ON es.id_settore = s.id
+                           WHERE es.id = ?
+                           LIMIT 1
+                           FOR UPDATE";
+            $stmt = $conn->prepare($sqlSettore);
+            $stmt->bind_param("i", $id_evento_settore);
             $stmt->execute();
             $result = $stmt->get_result();
-            $userId = $result->fetch_assoc()['id'];
+            $settoreAcquisto = $result->fetch_assoc();
             $stmt->close();
 
-            $sigilloFiscale = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyz"), 0, 15);
+            if (!$settoreAcquisto) {
+                throw new Exception("Settore non trovato.");
+            }
 
-            $_SESSION['ticket'] = [
-                'Sigillo_Fiscale' => $sigilloFiscale,
-                'posto' => $seat,
-                'prezzo' => $ticketPrice,
-                'sector' => $sector
+            $quantita = count($postiSelezionati);
+
+            if ((int)$settoreAcquisto['posti_disponibili'] < $quantita) {
+                throw new Exception("Non ci sono abbastanza posti disponibili per questa selezione.");
+            }
+
+            $stmt = $conn->prepare("SELECT posto FROM biglietto WHERE id_evento_settore = ?");
+            $stmt->bind_param("i", $id_evento_settore);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $occupati = [];
+            while ($row = $result->fetch_assoc()) {
+                $occupati[] = (int)$row['posto'];
+            }
+            $stmt->close();
+
+            foreach ($postiSelezionati as $posto) {
+                if ($posto > (int)$settoreAcquisto['posti_totali']) {
+                    throw new Exception("Uno dei posti selezionati non è valido.");
+                }
+                if (in_array($posto, $occupati, true)) {
+                    throw new Exception("Uno dei posti selezionati è già stato prenotato.");
+                }
+            }
+
+            $prezzoUnitario = (float)$settoreAcquisto['prezzo'];
+            $prezzoTotale = $prezzoUnitario * $quantita;
+
+            if ((float)$user['saldo'] < $prezzoTotale) {
+                $conn->rollback();
+                header("Location: User_dashboard.php");
+                exit();
+            }
+
+            $stmt = $conn->prepare("UPDATE utente SET saldo = saldo - ? WHERE id = ?");
+            $stmt->bind_param("di", $prezzoTotale, $user['id']);
+            $stmt->execute();
+            $stmt->close();
+
+            $stmt = $conn->prepare("UPDATE evento_settore SET posti_disponibili = posti_disponibili - ? WHERE id = ?");
+            $stmt->bind_param("ii", $quantita, $id_evento_settore);
+            $stmt->execute();
+            $stmt->close();
+
+            $disponibilita = 1;
+            $ticketCreati = [];
+
+            $stmt = $conn->prepare("INSERT INTO biglietto (sigillo_fiscale, disponibilita, id_utente, id_evento_settore, posto, prezzo)
+                                    VALUES (?, ?, ?, ?, ?, ?)");
+
+            foreach ($postiSelezionati as $posto) {
+                $sigilloFiscale = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 15);
+                $stmt->bind_param("siiiid", $sigilloFiscale, $disponibilita, $user['id'], $id_evento_settore, $posto, $prezzoUnitario);
+                $stmt->execute();
+
+                $ticketCreati[] = [
+                    'sigillo_fiscale' => $sigilloFiscale,
+                    'posto' => $posto,
+                    'prezzo' => $prezzoUnitario
+                ];
+            }
+
+            $stmt->close();
+
+            $_SESSION['ticket_info'] = [
+                'settore' => $settoreAcquisto['nome_settore'],
+                'evento' => $evento['titolo'],
+                'quantita' => $quantita,
+                'totale' => $prezzoTotale,
+                'biglietti' => $ticketCreati
             ];
 
-            $stmt = $conn->prepare("UPDATE utente SET saldo = saldo - ? WHERE id =?");
-            $stmt->bind_param("di", $ticketPrice, $userId);
-            $stmt->execute();
-            $stmt->close();
-
-            $stmt = $conn->prepare("INSERT INTO biglietto (Sigillo_Fiscale, Disponibilità, ID_Utente, ID_Partita, posto, settore, prezzo) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $disponibilita = 1;
-            $stmt->bind_param("siiissi", $sigilloFiscale, $disponibilita, $userId, $partitaId, $seat, $sector, $ticketPrice);
-            $stmt->execute();
-            $stmt->close();
-
-            $field = '';
-            if ($sector === 'VIP') {
-                $field = 'Posti_vip';
-            } elseif ($sector === 'Tribuna') {
-                $field = 'Posti_tribuna';
-            } elseif ($sector === 'Curva') {
-                $field = 'Posti_curva';
-            }
-
-            if ($field) {
-                $stmt = $conn->prepare("UPDATE partita SET $field = $field - 1 WHERE id = ?");
-                $stmt->bind_param("i", $partitaId);
-                $stmt->execute();
-                $stmt->close();
-            }
-
-            $stmt = $conn->prepare("UPDATE partita SET N_biglietti = N_biglietti - 1 WHERE id = ?");
-            $stmt->bind_param("i", $partitaId);
-            $stmt->execute();
-            $stmt->close();
-
             $conn->commit();
-
             header("Location: confirmation.php");
             exit();
+
         } catch (Exception $e) {
             $conn->rollback();
-            echo "Errore durante l'acquisto del biglietto: " . $e->getMessage();
-        } finally {
-            $conn->close();
+            $errore = $e->getMessage();
         }
-    } elseif ($walletBalance < $ticketPrice) {
-        header("Location: ricarica_saldo.php");
-        exit();
-    } else {
-        echo "La partita selezionata non esiste.";
     }
 }
+
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acquisto Biglietto</title>
-    <link rel="stylesheet" href="css/style3.css">
+    <title><?php echo htmlspecialchars($evento['titolo']); ?> - EasyTicket</title>
+    <link rel="stylesheet" href="css/style1.css?v=40">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
-    <style>
-        .notification {
-            display: none;
-            color: red;
-            margin-top: 10px;
-        }
-        .posti-finiti {
-            color: red;
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-    </style>
 </head>
 <body>
-    <header>
-        <h1>Benvenuto, <?php echo htmlspecialchars($username); ?></h1>
-        <p>Saldo: <?php echo $walletBalance; ?>€</p>
-        <p>Partita: <?php echo htmlspecialchars($matchDetails['Squadra_C']) . " vs " . htmlspecialchars($matchDetails['nome_squadra_ospite']); ?></p>
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="home.php" class="brand">
+                <img src="img/logo_sito.png" alt="Logo EasyTicket">
+            </a>
+
+            <nav class="user-nav">
+                <?php if (isset($_SESSION['ruolo']) && (int)$_SESSION['ruolo'] === 1): ?>
+                    <a href="admin_dashboard.php" class="user-pill primary-pill">admin</a>
+                <?php else: ?>
+                    <a href="User_dashboard.php" class="user-pill primary-pill"><?php echo htmlspecialchars($username); ?></a>
+                <?php endif; ?>
+                <a href="logout.php" class="user-pill secondary-pill">Logout</a>
+            </nav>
+        </div>
     </header>
-    <main>
-        <?php if ($allSeatsFull) { ?>
-            <div class="posti-finiti">Posti finiti</div>
-        <?php } else { ?>
-            <form id="ticketForm" method="post">
-                <div class="form-group">
-                    <label for="sector">Settore</label>
-                    <select id="sector" name="sector">
-                        <option value="">Seleziona un settore</option>
-                        <?php foreach ($prices as $sector => $price) {
-                            $availableSeatsKey = "Posti_" . strtolower($sector);
-                            if ($seatsData['available'][$availableSeatsKey] > 0) { ?>
-                                <option value="<?php echo htmlspecialchars($sector); ?>"><?php echo htmlspecialchars($sector); ?></option>
-                            <?php } } ?>
-                    </select>
+
+    <main class="page-shell">
+        <section class="section-block">
+            <div class="section-heading">
+                <h2><?php echo htmlspecialchars($evento['titolo']); ?></h2>
+                <p>
+                    <?php echo htmlspecialchars($evento['categoria']); ?>
+                    •
+                    <?php echo htmlspecialchars($evento['luogo']); ?>
+                    <?php if (!empty($evento['citta'])): ?>
+                        - <?php echo htmlspecialchars($evento['citta']); ?>
+                    <?php endif; ?>
+                </p>
+            </div>
+
+            <div class="admin-grid" style="margin-top: 24px;">
+                <div class="admin-preview-card">
+                    <div class="admin-preview-image" style="height: 300px;">
+                        <?php if (!empty($evento['immagine'])): ?>
+                            <img src="<?php echo htmlspecialchars($evento['immagine']); ?>" alt="<?php echo htmlspecialchars($evento['titolo']); ?>">
+                        <?php else: ?>
+                            <img src="img/evento-default.png" alt="Evento">
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="admin-preview-body">
+                        <div class="admin-preview-top">
+                            <span class="admin-preview-badge"><?php echo htmlspecialchars($evento['categoria']); ?></span>
+                            <span class="admin-preview-date"><?php echo count($repliche); ?> repliche</span>
+                        </div>
+
+                        <h4><?php echo htmlspecialchars($evento['titolo']); ?></h4>
+                        <p><?php echo nl2br(htmlspecialchars($evento['descrizione'] ?? 'Nessuna descrizione disponibile.')); ?></p>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="seat">Posto</label>
-                    <select id="seat" name="seat">
-                        <option value="">Seleziona un posto</option>
-                    </select>
+
+                <div class="admin-card">
+                    <h3>Dettagli utente</h3>
+
+                    <div class="admin-form-group">
+                        <label>Username</label>
+                        <input type="text" value="<?php echo htmlspecialchars($user['username']); ?>" readonly>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>Saldo disponibile</label>
+                        <input type="text" value="€ <?php echo number_format((float)$user['saldo'], 2, ',', '.'); ?>" readonly>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>Luogo evento</label>
+                        <input type="text" value="<?php echo htmlspecialchars($evento['luogo'] . (!empty($evento['citta']) ? ' - ' . $evento['citta'] : '')); ?>" readonly>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="ticket_price">Prezzo</label>
-                    <input type="text" id="ticket_price" name="ticket_price" readonly>
+            </div>
+        </section>
+
+        <section class="section-block">
+            <div class="section-heading">
+                <h2>Scegli la replica</h2>
+                <p>Seleziona giorno e orario dello spettacolo che preferisci.</p>
+            </div>
+
+            <?php if (empty($repliche)): ?>
+                <div class="empty-state">
+                    <h3>Nessuna replica disponibile</h3>
+                    <p>Questo evento non ha ancora date prenotabili.</p>
                 </div>
-                <input type="hidden" id="ticketPrice" name="ticket_price" value="">
-                <button type="submit">Acquista Biglietto</button>
-            </form>
-        <?php } ?>
-        <div id="notification" class="notification"></div>
+            <?php else: ?>
+                <div class="admin-list">
+                    <?php foreach ($repliche as $replica): ?>
+                        <div class="admin-list-item">
+                            <div>
+                                <strong><?php echo formatDataReplica($replica['data_ora_inizio']); ?></strong>
+                                <span>
+                                    <?php if (!empty($replica['data_ora_fine'])): ?>
+                                        • Fine <?php echo formatDataReplica($replica['data_ora_fine']); ?>
+                                    <?php else: ?>
+                                        • Stato <?php echo htmlspecialchars($replica['stato']); ?>
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+
+                            <div>
+                                <a class="hero-cta" href="evento.php?id=<?php echo $id_evento; ?>&replica=<?php echo (int)$replica['id']; ?>">
+                                    Seleziona
+                                </a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </section>
+
+        <?php if (!empty($settori)): ?>
+            <section class="section-block">
+                <div class="section-heading">
+                    <h2>Scegli il settore</h2>
+                    <p>
+                        Replica selezionata:
+                        <?php echo $replicaSelezionata ? formatDataReplica($replicaSelezionata['data_ora_inizio']) : 'Nessuna replica selezionata'; ?>
+                    </p>
+                </div>
+
+                <div class="matches-grid">
+                    <?php foreach ($settori as $settore): ?>
+                        <div class="match-card">
+                            <div class="match-card-top">
+                                <span class="match-badge"><?php echo htmlspecialchars($settore['nome_settore']); ?></span>
+                                <span class="match-date">€ <?php echo number_format((float)$settore['prezzo'], 2, ',', '.'); ?></span>
+                            </div>
+
+                            <div class="match-details" style="padding-top: 18px;">
+                                <h3><?php echo htmlspecialchars($settore['nome_settore']); ?></h3>
+                                <p>Posti disponibili: <?php echo (int)$settore['posti_disponibili']; ?> / <?php echo (int)$settore['posti_totali']; ?></p>
+                            </div>
+
+                            <div class="match-card-bottom">
+                                <a class="match-action" href="evento.php?id=<?php echo $id_evento; ?>&replica=<?php echo $id_replica; ?>&settore=<?php echo (int)$settore['id']; ?>">
+                                    Scegli questo settore
+                                </a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php endif; ?>
+
+        <?php if ($selectedSettore): ?>
+            <section class="section-block">
+                <div class="section-heading">
+                    <h2>Completa acquisto</h2>
+                    <p>
+                        Settore selezionato: <?php echo htmlspecialchars($selectedSettore['nome_settore']); ?>
+                        · Prezzo per biglietto: € <?php echo number_format((float)$selectedSettore['prezzo'], 2, ',', '.'); ?>
+                    </p>
+                </div>
+
+                <?php if (!empty($errore)): ?>
+                    <div class="admin-card" style="border-color:#f1d1ca; color:#c13d2a; margin-bottom:20px;">
+                        <?php echo htmlspecialchars($errore); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ((int)$selectedSettore['posti_disponibili'] <= 0): ?>
+                    <div class="empty-state">
+                        <h3>Posti finiti</h3>
+                        <p>Non ci sono più posti disponibili per questo settore.</p>
+                    </div>
+                <?php else: ?>
+                    <form method="post" class="admin-card">
+                        <input type="hidden" name="azione" value="acquista">
+                        <input type="hidden" name="id_evento_settore" value="<?php echo (int)$selectedSettore['id']; ?>">
+
+                        <div class="admin-form-group">
+                            <label>Seleziona i posti</label>
+                            <div class="seat-grid">
+                                <?php for ($i = 1; $i <= (int)$selectedSettore['posti_totali']; $i++): ?>
+                                    <?php $occupato = in_array($i, $postiOccupati, true); ?>
+                                    <?php if ($occupato): ?>
+                                        <span class="seat-pill seat-occupied">P<?php echo $i; ?></span>
+                                    <?php else: ?>
+                                        <label class="seat-pill seat-available">
+                                            <input type="checkbox" name="posti[]" value="<?php echo $i; ?>">
+                                            <span>P<?php echo $i; ?></span>
+                                        </label>
+                                    <?php endif; ?>
+                                <?php endfor; ?>
+                            </div>
+                            <small class="seat-legend">Blu chiaro = disponibile · Arancione = selezionato · Grigio = occupato</small>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>Prezzo per biglietto</label>
+                            <input type="text" value="€ <?php echo number_format((float)$selectedSettore['prezzo'], 2, ',', '.'); ?>" readonly>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>Posti disponibili</label>
+                            <input type="text" value="<?php echo (int)$selectedSettore['posti_disponibili']; ?>" readonly>
+                        </div>
+
+                        <button type="submit" class="admin-submit">Acquista biglietti</button>
+                    </form>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
     </main>
-    <script>
-        document.getElementById('sector').addEventListener('change', function() {
-            const settore = this.value;
-            const selezionePosto = document.getElementById('seat');
-            selezionePosto.innerHTML = '<option value="">Seleziona un posto</option>';
 
-            const postiDisponibili = <?php echo json_encode($seatsData['available']); ?>;
-            const postiOccupati = <?php echo json_encode($seatsData['occupied']); ?>;
-
-            if (settore) {
-                const chiaveSettore = "Posti_" + settore.toLowerCase();
-                const totalePosti = postiDisponibili[chiaveSettore];
-                const postiOccupatiSettore = postiOccupati[settore] || [];
-                
-                for (let posto = 1; posto <= totalePosti; posto++) {
-                    if (!postiOccupatiSettore.includes(posto)) {
-                        const opzione = document.createElement('option');
-                        opzione.value = posto;
-                        opzione.textContent = posto;
-                        selezionePosto.appendChild(opzione);
-                    }
-                }
-
-                const prezzi = <?php echo json_encode($prices); ?>;
-                const prezzo = prezzi[settore] || 0;
-                document.getElementById('ticket_price').value = prezzo ? prezzo + "€" : "0€";
-                document.getElementById('ticketPrice').value = prezzo;
-            }
-        });
-
-        document.getElementById('ticketForm').addEventListener('submit', function(event) {
-            const settore = document.getElementById('sector').value;
-            const posto = document.getElementById('seat').value;
-            const prezzoBiglietto = parseFloat(document.getElementById('ticket_price').value.replace('€', ''));
-            const saldoWallet = <?php echo $walletBalance; ?>;
-            const notifica = document.getElementById('notification');
-
-            if (!settore || !posto) {
-                notifica.textContent = "Per favore, seleziona sia un settore che un posto.";
-                notifica.style.display = 'block';
-                event.preventDefault();
-            } else if (saldoWallet < prezzoBiglietto) {
-                window.location.href = 'ricarica_saldo.php';
-                event.preventDefault();
-            } else {
-                notifica.style.display = 'none';
-            }
-        });
-    </script>
+    <footer class="site-footer">
+        <p>&copy; 2026 EasyTicket</p>
+    </footer>
 </body>
 </html>

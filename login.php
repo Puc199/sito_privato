@@ -1,25 +1,20 @@
 <?php
 session_start();
 
-// Abilita la visualizzazione degli errori
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Dettagli del database
 $servername = "localhost";
 $db_username = "root";
 $db_password = "";
 $dbname = "EasyTicket";
 
-// Crea connessione
 $conn = new mysqli($servername, $db_username, $db_password, $dbname);
 
-// Controlla connessione
 if ($conn->connect_error) {
     die("Connessione fallita: " . $conn->connect_error);
 }
 
-// Prendi i dati dal form
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -52,34 +47,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $conn->close();
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>EasyTicket</title>
-    <link rel="stylesheet" href="css/style2.css?v=20">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - EasyTicket</title>
+    <link rel="stylesheet" href="css/style2.css?v=21">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body>
-    <div class="main">
-        <img src="img/logo_sito.png" alt="Logo EasyTicket">
-        <?php if (isset($login_error)): ?>
-            <div class='alert alert-danger'><?php echo $login_error; ?></div>
-        <?php endif; ?>
-        <form action="login.php" method="post">
-            <label for="first">Username:</label>
-            <input type="text" id="first" name="username" placeholder="Inserisci Nome Utente" required>
-
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" placeholder="Inserisci Password" required>
-
-            <div class="wrap">
-                <button type="submit">Accedi</button>
+    <div class="login-shell">
+        <div class="login-card">
+            <div class="login-brand">
+                <img src="img/logo_sito.png" alt="Logo EasyTicket">
+                <h1>Accedi</h1>
             </div>
-        </form>
-        <p>
-            <a href="registra.php" style="text-decoration: none;">Crea account</a>
-            <br>
-            <a href="recuperaPassword.php" style="text-decoration: none;">Hai dimenticato la password?</a>
-        </p>
+
+            <?php if (isset($login_error)): ?>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($login_error); ?></div>
+            <?php endif; ?>
+
+            <form action="login.php" method="post" class="login-form">
+                <label for="first">Username</label>
+                <input type="text" id="first" name="username" placeholder="Inserisci nome utente" required>
+
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Inserisci password" required>
+
+                <div class="wrap">
+                    <button type="submit">Accedi</button>
+                </div>
+            </form>
+
+            <div class="login-links">
+                <a href="registra.php">Crea account</a>
+                <a href="recuperaPassword.php">Hai dimenticato la password?</a>
+            </div>
+        </div>
     </div>
 </body>
 </html>

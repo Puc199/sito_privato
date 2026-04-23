@@ -14,38 +14,35 @@ if ($conn->connect_error) {
     die("Connessione fallita: " . $conn->connect_error);
 }
 
-// Legge gli eventi dal nuovo schema
+$conn->set_charset("utf8mb4");
+
+// Legge gli eventi dal database
 $events = [];
-$sql = "SELECT e.id,
-               e.titolo,
-               e.data_evento,
-               c.nome AS categoria,
-               l.nome AS luogo
+$sql = "SELECT e.id, e.titolo, e.data_evento, e.immagine, c.nome AS categoria, l.nome AS luogo
         FROM evento e
         JOIN categoria c ON e.id_categoria = c.id
         JOIN luogo l ON e.id_luogo = l.id
         ORDER BY e.data_evento ASC";
 
 $result = $conn->query($sql);
-
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $events[] = $row;
     }
 }
+
 $conn->close();
 
 $role = isset($_SESSION['ruolo']) ? (int)$_SESSION['ruolo'] : null;
 $username = isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : null;
 $isLogged = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
 
-$heroTitle = $isLogged && $username
-    ? "Benvenuto su EasyTicket"
-    : "Benvenuto su EasyTicket";
-
+$heroTitle = "Benvenuto su EasyTicket";
 $heroSubtitle = $isLogged
     ? "Scopri i prossimi eventi, gestisci i tuoi biglietti e prenota in pochi click."
     : "Prenota i tuoi eventi in modo semplice, veloce e sicuro.";
+
+$heroBackground = "img/concerto.jpg";
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -54,7 +51,7 @@ $heroSubtitle = $isLogged
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EasyTicket</title>
     <link rel="icon" type="image/x-icon" href="img/icn_sito_sf.png">
-    <link rel="stylesheet" href="css/style1.css?v=20">
+    <link rel="stylesheet" href="css/style1.css?v=30">
 </head>
 <body>
     <header class="site-header">
@@ -65,7 +62,7 @@ $heroSubtitle = $isLogged
 
             <nav class="user-nav">
                 <?php if ($isLogged): ?>
-                    <a href="<?php echo $role == 1 ? 'admin_dashboard.php' : 'user_dashboard.php'; ?>" class="user-pill primary-pill">
+                    <a href="<?php echo $role === 1 ? 'admin_dashboard.php' : 'User_dashboard.php'; ?>" class="user-pill primary-pill">
                         <?php echo $username; ?>
                     </a>
                     <a href="logout.php" class="user-pill secondary-pill">Logout</a>
@@ -77,7 +74,7 @@ $heroSubtitle = $isLogged
     </header>
 
     <main class="page-shell">
-        <section class="hero-section">
+        <section class="hero-section" style="background: linear-gradient(rgba(7, 25, 41, 0.45), rgba(7, 25, 41, 0.55)), url('<?php echo htmlspecialchars($heroBackground, ENT_QUOTES, 'UTF-8'); ?>') center/cover no-repeat;">
             <div class="hero-overlay"></div>
             <div class="hero-content">
                 <h1><?php echo $heroTitle; ?></h1>
@@ -104,18 +101,18 @@ $heroSubtitle = $isLogged
             <?php if (!empty($events)): ?>
                 <div class="matches-grid">
                     <?php foreach ($events as $event): ?>
-                        <article class="match-card" onclick="handleEventClick(<?php echo $event['id']; ?>)">
+                        <article class="match-card" onclick="handleEventClick(<?php echo (int)$event['id']; ?>)">
                             <div class="match-card-top">
-                                <span class="match-badge">
-                                    <?php echo htmlspecialchars($event['categoria']); ?>
-                                </span>
-                                <span class="match-date">
-                                    <?php echo htmlspecialchars($event['data_evento']); ?>
-                                </span>
+                                <span class="match-badge"><?php echo htmlspecialchars($event['categoria']); ?></span>
+                                <span class="match-date"><?php echo htmlspecialchars($event['data_evento']); ?></span>
                             </div>
 
                             <div class="match-logos">
-                                <img src="img/evento-default.png" alt="Evento">
+                                <?php if (!empty($event['immagine'])): ?>
+                                    <img src="<?php echo htmlspecialchars($event['immagine']); ?>" alt="<?php echo htmlspecialchars($event['titolo']); ?>">
+                                <?php else: ?>
+                                    <img src="img/evento-default.png" alt="Evento">
+                                <?php endif; ?>
                             </div>
 
                             <div class="match-details">
@@ -144,18 +141,18 @@ $heroSubtitle = $isLogged
 
     <script>
         function handleEventClick(eventId) {
-            <?php if ($isLogged): ?>
-                <?php if ($role == 1): ?>
-                    window.location.href = 'admin_dashboard.php?id=' + eventId;
-                <?php elseif ($role == 2): ?>
-                    window.location.href = 'evento.php?id=' + eventId;
-                <?php else: ?>
-                    window.location.href = 'login.php';
-                <?php endif; ?>
-            <?php else: ?>
-                window.location.href = 'login.php';
-            <?php endif; ?>
-        }
+    <?php if ($isLogged): ?>
+        <?php if ($role === 1): ?>
+            window.location.href = "admin_dashboard.php?id=" + eventId;
+        <?php elseif ($role === 2): ?>
+            window.location.href = "evento.php?id=" + eventId;
+        <?php else: ?>
+            window.location.href = "login.php";
+        <?php endif; ?>
+    <?php else: ?>
+        window.location.href = "login.php";
+    <?php endif; ?>
+}
     </script>
 </body>
 </html>

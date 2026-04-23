@@ -1,12 +1,10 @@
 <?php
 session_start();
 
-// Abilita la visualizzazione degli errori
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Controlla se l'utente è loggato
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || !isset($_SESSION['username'])) {
     header("Location: login.php");
     exit();
 }
@@ -14,175 +12,331 @@ if (!isset($_SESSION['username'])) {
 $servername = "localhost";
 $db_username = "root";
 $db_password = "";
-$dbname = "sito";
-$username = $_SESSION['username'];
+$dbname = "EasyTicket";
 
-// Variabile per memorizzare i messaggi
-$message = "";
-
-// Connessione al database
 $conn = new mysqli($servername, $db_username, $db_password, $dbname);
 
-// Controlla connessione
 if ($conn->connect_error) {
     die("Connessione fallita: " . $conn->connect_error);
 }
 
-// Funzione per ottenere il saldo attuale
-function getWalletBalance($conn, $username) {
-    $stmt = $conn->prepare("SELECT saldo FROM utente WHERE username = ?");
-    if (!$stmt) {
-        die("Preparazione della query fallita: " . $conn->error);
-    }
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
+$conn->set_charset("utf8mb4");
 
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        return $row['saldo'];
-    }
-    return 0;
+$username = $_SESSION['username'];
+$walletMessage = "";
+$walletMessageType = "";
+
+/* =========================
+   RECUPERO DATI UTENTE
+========================= */
+$stmt = $conn->prepare("SELECT id, nome, cognome, username, saldo FROM utente WHERE username = ? LIMIT 1");
+if (!$stmt) {
+    die("Errore query utente: " . $conn->error);
+}
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$user) {
+    die("Utente non trovato.");
 }
 
-// Funzione per ottenere lo storico degli ordini
-function getOrderHistory($conn, $username) {
-    $stmt = $conn->prepare("
-        SELECT b.Sigillo_Fiscale, p.Squadra_C AS Squadra_C, s.nome AS Squadra_T, b.posto AS Posto, b.prezzo, b.settore AS Settore
-        FROM biglietto b
-        JOIN utente u ON b.ID_Utente = u.id
-        JOIN partita p ON b.ID_Partita = p.id
-        JOIN squadre s ON p.id_squadraOspite = s.id
-        WHERE u.username = ?
-        ORDER BY b.id DESC
-    ");
-    if (!$stmt) {
-        die("Preparazione della query fallita: " . $conn->error);
-    }
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
+/* =========================
+   RICARICA SALDO
+========================= */
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['wallet_action']) && $_POST['wallet_action'] === 'ricarica') {
+    $importo = 0;
 
-    $orders = [];
-    while ($row = $result->fetch_assoc()) {
-        $orders[] = $row;
+    if (isset($_POST['wallet_custom_submit'])) {
+        $importo = isset($_POST['importo_custom']) ? floatval($_POST['importo_custom']) : 0;
+    } elseif (isset($_POST['importo'])) {
+        $importo = floatval($_POST['importo']);
     }
-    return $orders;
-}
 
-// Aggiorna il saldo se il modulo è stato inviato
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $importo = isset($_POST['importo']) ? floatval($_POST['importo']) : 0;
-    if ($importo > 0) {
-        // Prepara e esegui query per ottenere l'ID utente
-        $stmt = $conn->prepare("SELECT id FROM utente WHERE username = ?");
+    if ($importo <= 0) {
+        $walletMessage = "Inserisci un importo valido maggiore di zero.";
+        $walletMessageType = "error";
+    } elseif ($importo > 1000) {
+        $walletMessage = "Puoi ricaricare al massimo 1000€ per singola operazione.";
+        $walletMessageType = "error";
+    } else {
+        $stmt = $conn->prepare("UPDATE utente SET saldo = saldo + ? WHERE id = ?");
         if (!$stmt) {
-            die("Preparazione della query fallita: " . $conn->error);
+            die("Errore query ricarica: " . $conn->error);
         }
+        $stmt->bind_param("di", $importo, $user['id']);
+
+        if ($stmt->execute()) {
+            $walletMessage = "Ricarica effettuata con successo.";
+            $walletMessageType = "success";
+        } else {
+            $walletMessage = "Errore durante la ricarica del saldo.";
+            $walletMessageType = "error";
+        }
+        $stmt->close();
+
+        $stmt = $conn->prepare("SELECT id, nome, cognome, username, saldo FROM utente WHERE username = ? LIMIT 1");
         $stmt->bind_param("s", $username);
         $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            $id = $row['id'];
-
-            // Aggiorna il saldo del wallet
-            $stmt = $conn->prepare("UPDATE utente SET saldo = saldo + ? WHERE id = ?");
-            if (!$stmt) {
-                die("Preparazione della query di aggiornamento fallita: " . $conn->error);
-            }
-            $stmt->bind_param("di", $importo, $id);
-
-            if ($stmt->execute()) {
-                $message = "Ricarica effettuata con successo.";
-                header("Location: User_dashboard.php");
-                exit();
-            } else {
-                $message = "Errore durante la ricarica del saldo: " . $stmt->error;
-            }
-        } else {
-            $message = "Utente non trovato.";
-        }
-    } else {
-        $message = "Importo non valido.";
+        $user = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
     }
 }
 
-// Ottieni il saldo attuale
-$walletBalance = getWalletBalance($conn, $username);
+$saldo = (float)($user['saldo'] ?? 0);
+$nomeCompleto = trim(($user['nome'] ?? '') . ' ' . ($user['cognome'] ?? ''));
+$displayName = $nomeCompleto !== '' ? $nomeCompleto : $user['username'];
 
-// Ottieni lo storico degli ordini
-$orderHistory = getOrderHistory($conn, $username);
+/* =========================
+   RECUPERO BIGLIETTI
+========================= */
+$stmt = $conn->prepare("
+    SELECT 
+        b.id,
+        b.sigillo_fiscale,
+        b.disponibilita,
+        b.posto,
+        b.prezzo,
+        b.data_acquisto,
+        s.nome AS settore_nome,
+        e.id AS evento_id,
+        e.titolo,
+        e.descrizione,
+        e.data_evento,
+        e.immagine,
+        e.stato
+    FROM biglietto b
+    INNER JOIN evento_settore es ON b.id_evento_settore = es.id
+    INNER JOIN evento e ON es.id_evento = e.id
+    INNER JOIN settore s ON es.id_settore = s.id
+    WHERE b.id_utente = ? AND b.disponibilita = 1
+    ORDER BY e.data_evento DESC, b.data_acquisto DESC
+");
 
-// Chiudi la connessione
+if (!$stmt) {
+    die("Errore query biglietti: " . $conn->error);
+}
+
+$stmt->bind_param("i", $user['id']);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$tickets = [];
+while ($row = $result->fetch_assoc()) {
+    $tickets[] = $row;
+}
+$stmt->close();
+
+$totalTickets = count($tickets);
+$totalSpent = 0;
+foreach ($tickets as $ticket) {
+    $totalSpent += (float)$ticket['prezzo'];
+}
+
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ricarica Saldo</title>
-    <link rel="stylesheet" href="css/style3.css">
+    <title>User Dashboard - EasyTicket</title>
+    <link rel="stylesheet" href="css/style1.css?v=dashboard2">
+    <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body>
-    <header>
-        <a href="home.php">
-            <img src="img/logo_inter.png" alt="logo Inter">
+
+<header class="site-header">
+    <div class="header-inner">
+        <a href="home.php" class="brand">
+            <img src="img/logo_sito.png" alt="EasyTicket">
         </a>
-    </header>
-    <main>
-        <h1>Ricarica Saldo</h1>
-        <div class="main-container">
-            <div class="container">
-                <h2>Ricarica</h2>
-                <p>Saldo attuale: <strong><?php echo htmlspecialchars($walletBalance); ?>€</strong></p>
-                <p>Ricarica qui il tuo saldo</p>
-                <form id="ricaricaForm" method="POST" action="">
-                    <label for="importo">Inserisci l'importo da ricaricare:</label>
-                    <input type="number" id="importo" name="importo" required>
-                    <button type="submit">Ricarica Saldo</button>
-                </form>
-                <?php if ($message): ?>
-                    <p><?php echo htmlspecialchars($message); ?></p>
-                <?php endif; ?>
+
+        <nav class="user-nav">
+            <a href="home.php" class="user-pill secondary-pill">Eventi</a>
+            <a href="logout.php" class="user-pill primary-pill">Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="dashboard-shell">
+
+    <section class="dashboard-top">
+        <article class="hero-user-card">
+            <span class="hero-label">Area personale</span>
+            <h1>Ciao <?php echo htmlspecialchars($displayName); ?>, bentornato</h1>
+            <p>
+                In questa dashboard puoi controllare i tuoi biglietti, vedere il saldo disponibile
+                e ricaricare il wallet senza aprire altre pagine.
+            </p>
+
+            <div class="hero-actions">
+                <a href="home.php" class="dash-btn dash-btn-primary">Scopri eventi</a>
+                <a href="#wallet-card" class="dash-btn dash-btn-secondary">Ricarica saldo</a>
             </div>
-            <div class="container">
-                <h2>Storico Ordini</h2>
-                <?php if (count($orderHistory) > 0): ?>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Sigillo Fiscale</th>
-                                <th>Squadra C</th>
-                                <th>Squadra T</th>
-                                <th>Settore</th>
-                                <th>Posto</th>
-                                <th>Prezzo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($orderHistory as $order): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($order['Sigillo_Fiscale']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['Squadra_C']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['Squadra_T']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['Settore']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['Posto']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['prezzo']); ?>€</td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php else: ?>
-                    <p>Non hai effettuato alcun ordine.</p>
-                <?php endif; ?>
+        </article>
+
+        <aside class="summary-card">
+            <h2>Riepilogo</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span>Saldo disponibile</span>
+                    <strong>€ <?php echo number_format($saldo, 2, ',', '.'); ?></strong>
+                </div>
+
+                <div class="stat-box">
+                    <span>Biglietti acquistati</span>
+                    <strong><?php echo $totalTickets; ?></strong>
+                </div>
+
+                <div class="stat-box">
+                    <span>Spesa totale</span>
+                    <strong>€ <?php echo number_format($totalSpent, 2, ',', '.'); ?></strong>
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <section class="dashboard-top" style="margin-top: 0;">
+        <article class="summary-card wallet-summary-card" id="wallet-card">
+            <div class="wallet-summary-top">
+                <div>
+                    <h2>Wallet</h2>
+                    <p>Ricarica il saldo direttamente dalla dashboard e continua subito con i tuoi acquisti.</p>
+                </div>
+                <span class="wallet-mini-badge">EasyTicket Wallet</span>
+            </div>
+
+            <div class="wallet-balance-display">
+                <span>Credito disponibile</span>
+                <strong>€ <?php echo number_format($saldo, 2, ',', '.'); ?></strong>
+            </div>
+
+            <?php if (!empty($walletMessage)): ?>
+                <div class="wallet-message <?php echo htmlspecialchars($walletMessageType); ?>">
+                    <?php echo htmlspecialchars($walletMessage); ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" class="wallet-inline-form">
+                <input type="hidden" name="wallet_action" value="ricarica">
+
+                <div class="wallet-quick-buttons">
+                    <button type="submit" name="importo" value="10">+10€</button>
+                    <button type="submit" name="importo" value="25">+25€</button>
+                    <button type="submit" name="importo" value="50">+50€</button>
+                    <button type="submit" name="importo" value="100">+100€</button>
+                </div>
+
+                <div class="wallet-custom-row">
+                    <input type="number" name="importo_custom" min="1" step="0.01" placeholder="Importo personalizzato">
+                    <button type="submit" name="wallet_custom_submit" value="1" class="dash-btn dash-btn-primary">
+                        Ricarica saldo
+                    </button>
+                </div>
+            </form>
+        </article>
+
+        <aside class="summary-card">
+            <h2>Informazioni account</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span>Utente</span>
+                    <strong><?php echo htmlspecialchars($user['username']); ?></strong>
+                </div>
+
+                <div class="stat-box">
+                    <span>Nome completo</span>
+                    <strong style="font-size:18px;"><?php echo htmlspecialchars($displayName); ?></strong>
+                </div>
+
+                <div class="stat-box">
+                    <span>Suggerimento</span>
+                    <strong style="font-size:16px; line-height:1.5; font-weight:600; color: var(--color-text);">
+                        Ricarica il saldo prima di acquistare, così completi più velocemente il checkout.
+                    </strong>
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <section class="tickets-section">
+        <div class="tickets-header">
+            <div>
+                <h2>I tuoi biglietti</h2>
+                <p>Qui trovi tutti i biglietti acquistati associati al tuo account.</p>
             </div>
         </div>
-    </main>
-    <footer>
-        <p>&copy; 2026 EasyTicket</p>
-    </footer>
+
+        <?php if ($totalTickets > 0): ?>
+            <div class="tickets-grid">
+                <?php foreach ($tickets as $ticket): ?>
+                    <article class="ticket-card">
+                        <div class="ticket-image">
+                            <?php if (!empty($ticket['immagine'])): ?>
+                                <img src="<?php echo htmlspecialchars($ticket['immagine']); ?>" alt="<?php echo htmlspecialchars($ticket['titolo']); ?>">
+                            <?php else: ?>
+                                <?php echo htmlspecialchars($ticket['titolo']); ?>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="ticket-body">
+                            <div class="ticket-top">
+                                <span class="ticket-badge"><?php echo htmlspecialchars($ticket['settore_nome']); ?></span>
+                                <span class="ticket-price">€ <?php echo number_format((float)$ticket['prezzo'], 2, ',', '.'); ?></span>
+                            </div>
+
+                            <h3 class="ticket-title"><?php echo htmlspecialchars($ticket['titolo']); ?></h3>
+
+                            <div class="ticket-meta">
+                                <div class="ticket-meta-box">
+                                    <span>Data evento</span>
+                                    <strong><?php echo date('d/m/Y H:i', strtotime($ticket['data_evento'])); ?></strong>
+                                </div>
+
+                                <div class="ticket-meta-box">
+                                    <span>Settore</span>
+                                    <strong><?php echo htmlspecialchars($ticket['settore_nome']); ?></strong>
+                                </div>
+
+                                <div class="ticket-meta-box">
+                                    <span>Posto</span>
+                                    <strong><?php echo htmlspecialchars($ticket['posto']); ?></strong>
+                                </div>
+
+                                <div class="ticket-meta-box">
+                                    <span>Acquistato il</span>
+                                    <strong><?php echo date('d/m/Y H:i', strtotime($ticket['data_acquisto'])); ?></strong>
+                                </div>
+                            </div>
+
+                            <div class="ticket-code">
+                                <span>Sigillo fiscale</span>
+                                <strong><?php echo htmlspecialchars($ticket['sigillo_fiscale']); ?></strong>
+                            </div>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="empty-card">
+                <h3>Nessun biglietto acquistato</h3>
+                <p>
+                    Non risultano ancora biglietti associati al tuo account.
+                    Vai alla pagina eventi, scegli quello che preferisci e completa l'acquisto.
+                </p>
+                <a href="home.php" class="dash-btn dash-btn-primary" style="margin-top:18px;">Vai agli eventi</a>
+            </div>
+        <?php endif; ?>
+    </section>
+
+</main>
+
+<footer class="site-footer">
+    © 2026 EasyTicket
+</footer>
+
 </body>
 </html>
