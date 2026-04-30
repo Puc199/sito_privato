@@ -1,20 +1,5 @@
 <?php
-session_start();
-
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "EasyTicket";
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
-
-$conn->set_charset("utf8mb4");
+require_once 'init.php';
 
 // Legge gli eventi dal database
 $events = [];
@@ -23,7 +8,6 @@ $sql = "SELECT e.id, e.titolo, e.data_evento, e.immagine, c.nome AS categoria, l
         JOIN categoria c ON e.id_categoria = c.id
         JOIN luogo l ON e.id_luogo = l.id
         ORDER BY e.data_evento ASC";
-
 $result = $conn->query($sql);
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -31,17 +15,13 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
-$conn->close();
-
 $role = isset($_SESSION['ruolo']) ? (int)$_SESSION['ruolo'] : null;
 $username = isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : null;
 $isLogged = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
-
 $heroTitle = "Benvenuto su EasyTicket";
 $heroSubtitle = $isLogged
     ? "Scopri i prossimi eventi, gestisci i tuoi biglietti e prenota in pochi click."
     : "Prenota i tuoi eventi in modo semplice, veloce e sicuro.";
-
 $heroBackground = "img/concerto.jpg";
 ?>
 <!DOCTYPE html>
