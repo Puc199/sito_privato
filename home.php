@@ -16,7 +16,7 @@ if ($result && $result->num_rows > 0) {
 }
 
 $role = isset($_SESSION['ruolo']) ? (int)$_SESSION['ruolo'] : null;
-$username = isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : null;
+$username = isset($_SESSION['username']) ? esc($_SESSION['username']) : null;
 $isLogged = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
 $heroTitle = "Benvenuto su EasyTicket";
 $heroSubtitle = $isLogged

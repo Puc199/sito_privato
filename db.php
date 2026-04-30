@@ -1,15 +1,15 @@
 <?php
+// Configurazione database per MAMP (mysqli)
 $servername = "localhost";
 $db_username = "root";
-$db_password = "root";
+$db_password = "root";  // Password default di MAMP
 $dbname = "EasyTicket";
 
-try {
-    $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8mb4", $db_username, $db_password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-    ]);
-} catch (PDOException $e) {
-    die("Connessione fallita: " . $e->getMessage());
+$conn = new mysqli($servername, $db_username, $db_password, $dbname);
+
+if ($conn->connect_error) {
+    die("Connessione fallita: " . $conn->connect_error);
 }
+
+$conn->set_charset("utf8mb4");
 ?>
