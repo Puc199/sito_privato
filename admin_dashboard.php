@@ -17,9 +17,6 @@ if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
 $messaggio = "";
 $errore = "";
 
-function esc($value) {
-    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
-}
 
 function getCategorie($conn) {
     $categorie = [];
