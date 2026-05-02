@@ -1,37 +1,23 @@
 <?php
-session_start();
+require_once 'init.php';
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "EasyTicket";
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
-
+$login_error = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    $sql = "SELECT * FROM utente WHERE username = ?";
-    $stmt = $conn->prepare($sql);
+    $stmt = $conn->prepare("SELECT * FROM utente WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
+    $stmt->close();
 
     if ($user) {
         if (password_verify($password, $user["password"])) {
             $_SESSION["username"] = $user["username"];
             $_SESSION["ruolo"] = (int)$user["id_ruolo"];
             $_SESSION["loggedin"] = true;
-
             header("Location: home.php");
             exit();
         } else {
@@ -40,11 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $login_error = "Username non valido";
     }
-
-    $stmt->close();
 }
-
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="it">
