@@ -3,7 +3,7 @@
 $servername = "localhost";
 $db_username = "root";
 $db_password = "root";  // Password default di MAMP
-$dbname = "EasyTicket";
+$dbname = "Easy";
 
 $conn = new mysqli($servername, $db_username, $db_password, $dbname);
 
