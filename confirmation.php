@@ -1,15 +1,16 @@
 <?php
-session_start();
+require_once 'init.php';
 
-if (!isset($_SESSION['username'])) {
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit();
-} else {
-    $username = $_SESSION['username'];
 }
 
-if (!isset($_SESSION['ticket'])) {
-    echo "Errore: dettagli del biglietto non trovati.";
+if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
+    header("Location: home.php");
     exit();
 }
 
