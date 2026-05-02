@@ -17,7 +17,6 @@ if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
 $messaggio = "";
 $errore = "";
 
-
 function getCategorie($conn) {
     $categorie = [];
     $sql = "SELECT id, nome FROM categoria ORDER BY nome ASC";
@@ -106,6 +105,7 @@ function salvaImmagineEvento($file) {
 
     $nomePulito = preg_replace('/[^a-zA-Z0-9_-]/', '-', pathinfo($file['name'], PATHINFO_FILENAME));
     $nomePulito = trim($nomePulito, '-');
+
     if ($nomePulito === '') {
         $nomePulito = 'evento';
     }
@@ -131,7 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data_inizio = trim($_POST['data_inizio'] ?? '');
         $data_fine = trim($_POST['data_fine'] ?? '');
         $orario_spettacolo = trim($_POST['orario_spettacolo'] ?? '');
-
         $settori_input = $_POST['settori'] ?? [];
 
         try {
@@ -144,11 +143,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Intervallo date non valido.");
             }
 
-            $settoriValidi = [];
             if (!is_array($settori_input) || empty($settori_input)) {
                 throw new Exception("Inserisci almeno un settore.");
             }
 
+            $settoriValidi = [];
             foreach ($settori_input as $settoreRow) {
                 $id_settore = (int)($settoreRow['id_settore'] ?? 0);
                 $prezzo = str_replace(',', '.', trim((string)($settoreRow['prezzo'] ?? '')));
@@ -169,7 +168,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $immagine = salvaImmagineEvento($_FILES['immagine'] ?? null);
-
             $primaDataEvento = $dateGenerate[0] . ' ' . $orario_spettacolo . ':00';
 
             $conn->begin_transaction();
@@ -179,6 +177,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 INSERT INTO evento (titolo, descrizione, data_evento, id_categoria, id_luogo, immagine, stato)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
+
+            if (!$stmtEvento) {
+                throw new Exception("Errore preparazione inserimento evento.");
+            }
+
             $stmtEvento->bind_param(
                 "sssiiss",
                 $titolo,
@@ -198,10 +201,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 VALUES (?, ?, ?, ?)
             ");
 
+            if (!$stmtReplica) {
+                throw new Exception("Errore preparazione inserimento repliche.");
+            }
+
             $stmtSettore = $conn->prepare("
                 INSERT INTO evento_settore (id_replica_evento, id_evento, id_settore, prezzo, posti_totali, posti_disponibili)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
+
+            if (!$stmtSettore) {
+                throw new Exception("Errore preparazione inserimento settori.");
+            }
 
             $statoReplica = 'programmata';
             $numeroRepliche = 0;
@@ -247,7 +258,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->commit();
             $messaggio = "Evento creato con successo. Repliche generate: " . $numeroRepliche . ".";
         } catch (Exception $e) {
-            $conn->rollback();
+            try {
+                $conn->rollback();
+            } catch (Throwable $t) {
+            }
             $errore = $e->getMessage();
         }
     }
@@ -296,7 +310,7 @@ $sqlEventi = "
         e.id,
         e.titolo,
         e.descrizione,
-        e.data_evento,
+        MIN(r.data_ora_inizio) AS data_evento,
         e.immagine,
         e.stato,
         c.nome AS categoria,
@@ -307,10 +321,19 @@ $sqlEventi = "
     JOIN categoria c ON e.id_categoria = c.id
     JOIN luogo l ON e.id_luogo = l.id
     LEFT JOIN replica_evento r ON r.id_evento = e.id
-    GROUP BY e.id
-    ORDER BY e.data_evento DESC, e.id DESC
+    GROUP BY 
+        e.id,
+        e.titolo,
+        e.descrizione,
+        e.immagine,
+        e.stato,
+        c.nome,
+        l.nome,
+        l.citta
+    ORDER BY data_evento DESC, e.id DESC
 ";
 $resultEventi = $conn->query($sqlEventi);
+
 if ($resultEventi) {
     while ($row = $resultEventi->fetch_assoc()) {
         $eventi[] = $row;
@@ -594,7 +617,7 @@ $conn->close();
                         <th>Titolo</th>
                         <th>Categoria</th>
                         <th>Luogo</th>
-                        <th>Data base</th>
+                        <th>Prima data</th>
                         <th>Repliche</th>
                         <th>Stato</th>
                         <th>Azioni</th>
@@ -616,7 +639,13 @@ $conn->close();
                             </td>
                             <td><?php echo esc($evento['categoria']); ?></td>
                             <td><?php echo esc($evento['luogo'] . ' - ' . $evento['citta']); ?></td>
-                            <td><?php echo esc(date('d/m/Y H:i', strtotime($evento['data_evento']))); ?></td>
+                            <td>
+                                <?php
+                                echo !empty($evento['data_evento'])
+                                    ? esc(date('d/m/Y H:i', strtotime($evento['data_evento'])))
+                                    : 'N/D';
+                                ?>
+                            </td>
                             <td><?php echo (int)$evento['numero_repliche']; ?></td>
                             <td><?php echo esc($evento['stato']); ?></td>
                             <td>
