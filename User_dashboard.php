@@ -1,26 +1,18 @@
 <?php
-session_start();
+require_once 'init.php';
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || !isset($_SESSION['username'])) {
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit();
 }
 
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "EasyTicket";
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
+if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
+    header("Location: home.php");
+    exit();
 }
-
-$conn->set_charset("utf8mb4");
 
 $username = $_SESSION['username'];
 $walletMessage = "";

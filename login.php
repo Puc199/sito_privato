@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h1>Accedi</h1>
             </div>
 
-            <?php if (isset($login_error)): ?>
+            <?php if (!empty($login_error)): ?>
                 <div class="alert alert-danger"><?php echo htmlspecialchars($login_error); ?></div>
             <?php endif; ?>
 

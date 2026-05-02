@@ -10,19 +10,20 @@
     <div class="main">
         <h1>Recupera Password</h1>
         <?php
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $servername = "localhost"; // Il server MySQL
-            $username = "root"; // Il nome utente MySQL
-            $password = ""; // La password MySQL
-            $dbname = "sito"; // Il nome del database
+require_once 'init.php';
 
-            // Crea una connessione
-            $conn = new mysqli($servername, $username, $password, $dbname);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-            // Verifica la connessione
-            if ($conn->connect_error) {
-                die("Connessione fallita: " . $conn->connect_error);
-            }
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    header("Location: login.php");
+    exit();
+}
+
+if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
+    header("Location: home.php");
+    exit();
+}
 
             $user = $_POST['username'];
             $new_password = $_POST['password'];
@@ -58,7 +59,6 @@
 
             $stmt->close();
             $conn->close();
-        }
         ?>
         <form action="" method="post">
             <label for="first">Username:</label>

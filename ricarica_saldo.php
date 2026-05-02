@@ -1,31 +1,17 @@
 <?php
-session_start();
+require_once 'init.php';
 
-// Abilita la visualizzazione degli errori
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Controlla se l'utente è loggato
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit();
 }
 
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "sito";
-$username = $_SESSION['username'];
-
-// Variabile per memorizzare i messaggi
-$message = "";
-
-// Connessione al database
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-// Controlla connessione
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
+if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
+    header("Location: home.php");
+    exit();
 }
 
 // Funzione per ottenere il saldo attuale
