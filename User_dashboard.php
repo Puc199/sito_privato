@@ -1,30 +1,31 @@
 <?php
 require_once 'init.php';
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit();
 }
 
-if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
+if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 2) {
     header("Location: home.php");
     exit();
 }
 
-$username = $_SESSION['username'];
-$walletMessage = "";
-$walletMessageType = "";
+$username = $_SESSION['username'] ?? null;
 
-/* =========================
-   RECUPERO DATI UTENTE
-========================= */
+if (!$username) {
+    header("Location: login.php");
+    exit();
+}
+
+$walletMessage = '';
+$walletMessageType = '';
+
 $stmt = $conn->prepare("SELECT id, nome, cognome, username, saldo FROM utente WHERE username = ? LIMIT 1");
 if (!$stmt) {
     die("Errore query utente: " . $conn->error);
 }
+
 $stmt->bind_param("s", $username);
 $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
@@ -57,6 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['wallet_action']) && $
         if (!$stmt) {
             die("Errore query ricarica: " . $conn->error);
         }
+
         $stmt->bind_param("di", $importo, $user['id']);
 
         if ($stmt->execute()) {
@@ -66,9 +68,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['wallet_action']) && $
             $walletMessage = "Errore durante la ricarica del saldo.";
             $walletMessageType = "error";
         }
+
         $stmt->close();
 
         $stmt = $conn->prepare("SELECT id, nome, cognome, username, saldo FROM utente WHERE username = ? LIMIT 1");
+        if (!$stmt) {
+            die("Errore query aggiornamento utente: " . $conn->error);
+        }
+
         $stmt->bind_param("s", $username);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
@@ -84,7 +91,7 @@ $displayName = $nomeCompleto !== '' ? $nomeCompleto : $user['username'];
    RECUPERO BIGLIETTI
 ========================= */
 $stmt = $conn->prepare("
-    SELECT 
+    SELECT
         b.id,
         b.sigillo_fiscale,
         b.disponibilita,
@@ -122,6 +129,7 @@ $stmt->close();
 
 $totalTickets = count($tickets);
 $totalSpent = 0;
+
 foreach ($tickets as $ticket) {
     $totalSpent += (float)$ticket['prezzo'];
 }
