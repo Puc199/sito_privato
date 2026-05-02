@@ -1,27 +1,16 @@
 <?php
 require_once 'init.php';
 
-// Legge gli eventi dal database
-$events = [];
-$sql = "SELECT 
-            e.id, 
-            e.titolo, 
-            MIN(r.data_ora_inizio) AS data_evento, 
-            e.immagine, 
-            c.nome AS categoria, 
-            l.nome AS luogo
+// La data non è più in evento, ma in replica_evento. Prendiamo la prima replica programmata.
+$sql = "SELECT e.id, e.titolo, e.immagine, c.nome AS categoria, l.nome AS luogo, l.citta,
+               MIN(r.data_ora_inizio) AS prima_replica
         FROM evento e
-        JOIN replica_evento r ON r.id_evento = e.id
         JOIN categoria c ON e.id_categoria = c.id
         JOIN luogo l ON e.id_luogo = l.id
-        GROUP BY e.id, e.titolo, e.immagine, c.nome, l.nome
-        ORDER BY data_evento ASC";
-$result = $conn->query($sql);
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $events[] = $row;
-    }
-}
+        LEFT JOIN replica_evento r ON r.id_evento = e.id AND r.stato = 'programmata'
+        GROUP BY e.id, e.titolo, e.immagine, c.nome, l.nome, l.citta
+        ORDER BY prima_replica ASC";
+$events = $pdo->query($sql)->fetchAll();
 
 $role = isset($_SESSION['ruolo']) ? (int)$_SESSION['ruolo'] : null;
 $username = isset($_SESSION['username']) ? esc($_SESSION['username']) : null;
