@@ -3,11 +3,19 @@ require_once 'init.php';
 
 // Legge gli eventi dal database
 $events = [];
-$sql = "SELECT e.id, e.titolo, r.data_ora_inizio, e.immagine, c.nome AS categoria, l.nome AS luogo
+$sql = "SELECT 
+            e.id, 
+            e.titolo, 
+            MIN(r.data_ora_inizio) AS data_evento, 
+            e.immagine, 
+            c.nome AS categoria, 
+            l.nome AS luogo
         FROM evento e
+        JOIN replica_evento r ON r.id_evento = e.id
         JOIN categoria c ON e.id_categoria = c.id
         JOIN luogo l ON e.id_luogo = l.id
-        ORDER BY e.data_evento ASC";
+        GROUP BY e.id, e.titolo, e.immagine, c.nome, l.nome
+        ORDER BY data_evento ASC";
 $result = $conn->query($sql);
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
