@@ -42,7 +42,7 @@ $heroBackground = "img/concerto.jpg";
 
             <nav class="user-nav">
                 <?php if ($isLogged): ?>
-                    <a href="<?php echo $role === 1 ? 'admin_dashboard.php' : 'User_dashboard.php'; ?>" class="user-pill primary-pill">
+                    <a href="<?php echo $role === 2 ? 'admin_dashboard.php' : 'User_dashboard.php'; ?>" class="user-pill primary-pill">
                         <?php echo $username; ?>
                     </a>
                     <a href="logout.php" class="user-pill secondary-pill">Logout</a>
