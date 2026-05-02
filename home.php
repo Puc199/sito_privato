@@ -125,7 +125,7 @@ $heroBackground = "img/concerto.jpg";
         <?php if ($role === 1): ?>
             window.location.href = "admin_dashboard.php?id=" + eventId;
         <?php elseif ($role === 2): ?>
-            window.location.href = "evento.php?id=" + eventId;
+            window.location.href = "User_dashboard.php";
         <?php else: ?>
             window.location.href = "login.php";
         <?php endif; ?>
