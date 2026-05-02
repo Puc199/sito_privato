@@ -3,7 +3,7 @@ require_once 'init.php';
 
 // Legge gli eventi dal database
 $events = [];
-$sql = "SELECT e.id, e.titolo, e.data_evento, e.immagine, c.nome AS categoria, l.nome AS luogo
+$sql = "SELECT e.id, e.titolo, r.data_ora_inizio, e.immagine, c.nome AS categoria, l.nome AS luogo
         FROM evento e
         JOIN categoria c ON e.id_categoria = c.id
         JOIN luogo l ON e.id_luogo = l.id
