@@ -17,49 +17,74 @@ if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
 $messaggio = "";
 $errore = "";
 
-function getCategorie($conn) {
+function tableExists(mysqli $conn, string $tableName): bool {
+    $safeName = $conn->real_escape_string($tableName);
+    $sql = "SHOW TABLES LIKE '{$safeName}'";
+    $result = $conn->query($sql);
+    return $result && $result->num_rows > 0;
+}
+
+function getCategorie(mysqli $conn): array {
     $categorie = [];
     $sql = "SELECT id, nome FROM categoria ORDER BY nome ASC";
     $result = $conn->query($sql);
+
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $categorie[] = $row;
         }
     }
+
     return $categorie;
 }
 
-function getLuoghi($conn) {
+function getLuoghi(mysqli $conn): array {
     $luoghi = [];
     $sql = "SELECT id, nome, citta, tipo FROM luogo ORDER BY nome ASC";
     $result = $conn->query($sql);
+
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $luoghi[] = $row;
         }
     }
+
     return $luoghi;
 }
 
-function getSettori($conn) {
-    $settori = [];
-    $sql = "SELECT id, nome, descrizione FROM settore ORDER BY id ASC";
-    $result = $conn->query($sql);
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $settori[] = $row;
+function getSettori(mysqli $conn): array {
+    if (tableExists($conn, 'settore')) {
+        $settori = [];
+        $sql = "SELECT id, nome, descrizione FROM settore ORDER BY id ASC";
+        $result = $conn->query($sql);
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $settori[] = $row;
+            }
+        }
+
+        if (!empty($settori)) {
+            return $settori;
         }
     }
-    return $settori;
+
+    return [
+        ['id' => 1, 'nome' => 'VIP', 'descrizione' => 'Posti premium'],
+        ['id' => 2, 'nome' => 'Tribuna', 'descrizione' => 'Posti centrali numerati'],
+        ['id' => 3, 'nome' => 'Curva', 'descrizione' => 'Settore popolare'],
+        ['id' => 4, 'nome' => 'Platea', 'descrizione' => 'Posti in platea'],
+        ['id' => 5, 'nome' => 'Galleria', 'descrizione' => 'Posti in galleria']
+    ];
 }
 
-function generaDateIntervallo($dataInizio, $dataFine) {
+function generaDateIntervallo(string $dataInizio, string $dataFine): array {
     $date = [];
 
     $inizio = new DateTime($dataInizio);
     $fine = new DateTime($dataFine);
-    $fine->setTime(0, 0, 0);
     $inizio->setTime(0, 0, 0);
+    $fine->setTime(0, 0, 0);
 
     if ($inizio > $fine) {
         return [];
@@ -74,7 +99,7 @@ function generaDateIntervallo($dataInizio, $dataFine) {
     return $date;
 }
 
-function salvaImmagineEvento($file) {
+function salvaImmagineEvento(?array $file): ?string {
     if (!isset($file) || !isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
@@ -104,7 +129,7 @@ function salvaImmagineEvento($file) {
     }
 
     $nomePulito = preg_replace('/[^a-zA-Z0-9_-]/', '-', pathinfo($file['name'], PATHINFO_FILENAME));
-    $nomePulito = trim($nomePulito, '-');
+    $nomePulito = trim((string)$nomePulito, '-');
 
     if ($nomePulito === '') {
         $nomePulito = 'evento';
@@ -122,7 +147,6 @@ function salvaImmagineEvento($file) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     if (isset($_POST['azione']) && $_POST['azione'] === 'aggiungi_evento') {
         $titolo = trim($_POST['titolo'] ?? '');
         $descrizione = trim($_POST['descrizione'] ?? '');
@@ -179,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
 
             if (!$stmtEvento) {
-                throw new Exception("Errore preparazione inserimento evento.");
+                throw new Exception("Errore preparazione inserimento evento: " . $conn->error);
             }
 
             $stmtEvento->bind_param(
@@ -202,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
 
             if (!$stmtReplica) {
-                throw new Exception("Errore preparazione inserimento repliche.");
+                throw new Exception("Errore preparazione inserimento repliche: " . $conn->error);
             }
 
             $stmtSettore = $conn->prepare("
@@ -211,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
 
             if (!$stmtSettore) {
-                throw new Exception("Errore preparazione inserimento settori.");
+                throw new Exception("Errore preparazione inserimento settori: " . $conn->error);
             }
 
             $statoReplica = 'programmata';
@@ -257,10 +281,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $conn->commit();
             $messaggio = "Evento creato con successo. Repliche generate: " . $numeroRepliche . ".";
-        } catch (Exception $e) {
-            try {
-                $conn->rollback();
-            } catch (Throwable $t) {
+        } catch (Throwable $e) {
+            if ($conn instanceof mysqli) {
+                try {
+                    $conn->rollback();
+                } catch (Throwable $rollbackError) {
+                }
             }
             $errore = $e->getMessage();
         }
@@ -275,13 +301,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $stmt = $conn->prepare("SELECT immagine FROM evento WHERE id = ? LIMIT 1");
+            if (!$stmt) {
+                throw new Exception("Errore nella preparazione lettura evento: " . $conn->error);
+            }
+
             $stmt->bind_param("i", $id_evento_elimina);
             $stmt->execute();
             $result = $stmt->get_result();
-            $eventoDaEliminare = $result->fetch_assoc();
+            $eventoDaEliminare = $result ? $result->fetch_assoc() : null;
             $stmt->close();
 
             $stmt = $conn->prepare("DELETE FROM evento WHERE id = ?");
+            if (!$stmt) {
+                throw new Exception("Errore nella preparazione eliminazione evento: " . $conn->error);
+            }
+
             $stmt->bind_param("i", $id_evento_elimina);
             $stmt->execute();
             $stmt->close();
@@ -294,7 +328,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $messaggio = "Evento eliminato con successo.";
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $errore = $e->getMessage();
         }
     }
@@ -310,7 +344,7 @@ $sqlEventi = "
         e.id,
         e.titolo,
         e.descrizione,
-        MIN(r.data_ora_inizio) AS data_evento,
+        COALESCE(MIN(r.data_ora_inizio), e.data_evento) AS data_evento,
         e.immagine,
         e.stato,
         c.nome AS categoria,
@@ -325,6 +359,7 @@ $sqlEventi = "
         e.id,
         e.titolo,
         e.descrizione,
+        e.data_evento,
         e.immagine,
         e.stato,
         c.nome,
@@ -640,11 +675,7 @@ $conn->close();
                             <td><?php echo esc($evento['categoria']); ?></td>
                             <td><?php echo esc($evento['luogo'] . ' - ' . $evento['citta']); ?></td>
                             <td>
-                                <?php
-                                echo !empty($evento['data_evento'])
-                                    ? esc(date('d/m/Y H:i', strtotime($evento['data_evento'])))
-                                    : 'N/D';
-                                ?>
+                                <?php echo !empty($evento['data_evento']) ? esc(date('d/m/Y H:i', strtotime($evento['data_evento']))) : 'N/D'; ?>
                             </td>
                             <td><?php echo (int)$evento['numero_repliche']; ?></td>
                             <td><?php echo esc($evento['stato']); ?></td>
