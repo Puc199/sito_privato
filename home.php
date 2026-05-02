@@ -1,27 +1,16 @@
 <?php
 require_once 'init.php';
 
-// Legge gli eventi dal database
-$events = [];
-$sql = "SELECT 
-            e.id, 
-            e.titolo, 
-            MIN(r.data_ora_inizio) AS data_evento, 
-            e.immagine, 
-            c.nome AS categoria, 
-            l.nome AS luogo
+// Query corretta con PDO - la data si prende da replica_evento
+$sql = "SELECT e.id, e.titolo, MIN(r.data_ora_inizio) AS data_evento, e.immagine, c.nome AS categoria, l.nome AS luogo
         FROM evento e
-        JOIN replica_evento r ON r.id_evento = e.id
         JOIN categoria c ON e.id_categoria = c.id
         JOIN luogo l ON e.id_luogo = l.id
+        LEFT JOIN replica_evento r ON r.id_evento = e.id
         GROUP BY e.id, e.titolo, e.immagine, c.nome, l.nome
         ORDER BY data_evento ASC";
-$result = $conn->query($sql);
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $events[] = $row;
-    }
-}
+$stmt = $pdo->query($sql);
+$events = $stmt->fetchAll();
 
 $role = isset($_SESSION['ruolo']) ? (int)$_SESSION['ruolo'] : null;
 $username = isset($_SESSION['username']) ? esc($_SESSION['username']) : null;
@@ -131,9 +120,9 @@ $heroBackground = "img/concerto.jpg";
         function handleEventClick(eventId) {
     <?php if ($isLogged): ?>
         <?php if ($role === 1): ?>
-            window.location.href = "admin_dashboard.php?id=" + eventId;
+            window.location.href = "modifica_evento.php?id=" + eventId;
         <?php elseif ($role === 2): ?>
-            window.location.href = "User_dashboard.php";
+            window.location.href = "evento.php?id=" + eventId;
         <?php else: ?>
             window.location.href = "login.php";
         <?php endif; ?>

@@ -5,124 +5,95 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header("Location: login.php");
-    exit();
-}
-
-if (!isset($_SESSION['ruolo']) || (int)$_SESSION['ruolo'] !== 1) {
-    header("Location: home.php");
+    header('Location: login.php');
     exit();
 }
 
 $username = $_SESSION['username'] ?? 'Utente';
-$id_evento = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$ruolo = (int)($_SESSION['ruolo'] ?? 0);
+$id_evento = (int)($_GET['id'] ?? 0);
 
 if ($id_evento <= 0) {
-    die("Evento non valido.");
+    die('Evento non valido.');
 }
 
-function getUserData($conn, $username) {
-    $stmt = $conn->prepare("SELECT id, username, saldo FROM utente WHERE username = ? LIMIT 1");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
-    $stmt->close();
-    return $user;
+function getUserData(PDO $pdo, string $username): ?array {
+    $stmt = $pdo->prepare('SELECT id, username, saldo FROM utente WHERE username = ? LIMIT 1');
+    $stmt->execute([$username]);
+    $user = $stmt->fetch();
+    return $user ?: null;
 }
 
-function getEventoDettaglio($conn, $id_evento) {
-    $sql = "SELECT e.id, e.titolo, e.descrizione, e.data_evento, e.immagine, e.stato,
+function getEventoDettaglio(PDO $pdo, int $id_evento): ?array {
+    $sql = "SELECT e.id, e.titolo, e.descrizione, e.immagine, e.stato,
                    c.nome AS categoria,
                    l.nome AS luogo,
-                   l.citta
+                   l.citta,
+                   MIN(r.data_ora_inizio) AS data_evento
             FROM evento e
             JOIN categoria c ON e.id_categoria = c.id
             JOIN luogo l ON e.id_luogo = l.id
+            LEFT JOIN replica_evento r ON r.id_evento = e.id
             WHERE e.id = ?
+            GROUP BY e.id, e.titolo, e.descrizione, e.immagine, e.stato, c.nome, l.nome, l.citta
             LIMIT 1";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id_evento);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $evento = $result->fetch_assoc();
-    $stmt->close();
-    return $evento;
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id_evento]);
+    $evento = $stmt->fetch();
+    return $evento ?: null;
 }
 
-function getReplicheEvento($conn, $id_evento) {
-    $sql = "SELECT id, data_ora_inizio, data_ora_fine, stato
-            FROM replica_evento
-            WHERE id_evento = ?
-            ORDER BY data_ora_inizio ASC";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id_evento);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $repliche = [];
-    while ($row = $result->fetch_assoc()) {
-        $repliche[] = $row;
-    }
-    $stmt->close();
-    return $repliche;
+function getReplicheEvento(PDO $pdo, int $id_evento): array {
+    $sql = 'SELECT id, data_ora_inizio, data_ora_fine, stato FROM replica_evento WHERE id_evento = ? ORDER BY data_ora_inizio ASC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id_evento]);
+    return $stmt->fetchAll();
 }
 
-function getSettoriReplica($conn, $id_replica) {
+function getSettoriReplica(PDO $pdo, int $id_replica): array {
     $sql = "SELECT es.id, es.id_evento, es.id_replica_evento, es.id_settore,
                    es.prezzo, es.posti_totali, es.posti_disponibili,
                    s.nome AS nome_settore
             FROM evento_settore es
             JOIN settore s ON es.id_settore = s.id
             WHERE es.id_replica_evento = ?
-            ORDER BY es.prezzo ASC";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id_replica);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $settori = [];
-    while ($row = $result->fetch_assoc()) {
-        $settori[] = $row;
-    }
-    $stmt->close();
-    return $settori;
+            ORDER BY es.prezzo ASC, s.nome ASC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id_replica]);
+    return $stmt->fetchAll();
 }
 
-function getPostiOccupati($conn, $id_evento_settore) {
-    $sql = "SELECT posto
-            FROM biglietto
-            WHERE id_evento_settore = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id_evento_settore);
-    $stmt->execute();
-    $result = $stmt->get_result();
+function getPostiOccupati(PDO $pdo, int $id_evento_settore): array {
+    $sql = 'SELECT posto FROM biglietto WHERE id_evento_settore = ?';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id_evento_settore]);
     $posti = [];
-    while ($row = $result->fetch_assoc()) {
+    foreach ($stmt->fetchAll() as $row) {
         $posti[] = (int)$row['posto'];
     }
-    $stmt->close();
     return $posti;
 }
 
-function formatDataReplica($datetime) {
+function formatDataReplica(?string $datetime): string {
     if (!$datetime) {
         return '';
     }
     return date('d/m/Y H:i', strtotime($datetime));
 }
 
-$user = getUserData($conn, $username);
+$user = getUserData($pdo, $username);
 if (!$user) {
-    die("Utente non trovato.");
+    die('Utente non trovato.');
 }
 
-$evento = getEventoDettaglio($conn, $id_evento);
+$evento = getEventoDettaglio($pdo, $id_evento);
 if (!$evento) {
-    die("Evento non trovato.");
+    die('Evento non trovato.');
 }
 
-$repliche = getReplicheEvento($conn, $id_evento);
+$repliche = getReplicheEvento($pdo, $id_evento);
 
-$id_replica = isset($_GET['replica']) ? (int)$_GET['replica'] : 0;
+$id_replica = (int)($_GET['replica'] ?? 0);
 if ($id_replica === 0 && !empty($repliche)) {
     $id_replica = (int)$repliche[0]['id'];
 }
@@ -137,10 +108,10 @@ foreach ($repliche as $replica) {
 
 $settori = [];
 if ($id_replica > 0) {
-    $settori = getSettoriReplica($conn, $id_replica);
+    $settori = getSettoriReplica($pdo, $id_replica);
 }
 
-$selected_settore_id = isset($_GET['settore']) ? (int)$_GET['settore'] : 0;
+$selected_settore_id = (int)($_GET['settore'] ?? 0);
 $selectedSettore = null;
 $postiOccupati = [];
 
@@ -152,129 +123,119 @@ foreach ($settori as $settore) {
 }
 
 if ($selectedSettore) {
-    $postiOccupati = getPostiOccupati($conn, $selected_settore_id);
+    $postiOccupati = getPostiOccupati($pdo, $selected_settore_id);
 }
 
-$errore = "";
+$errore = '';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['azione']) && $_POST['azione'] === 'acquista') {
-    $id_evento_settore = (int)($_POST['id_evento_settore'] ?? 0);
-    $postiSelezionati = $_POST['posti'] ?? [];
-
-    if (!is_array($postiSelezionati)) {
-        $postiSelezionati = [];
-    }
-
-    $postiSelezionati = array_values(array_unique(array_map('intval', $postiSelezionati)));
-    $postiSelezionati = array_filter($postiSelezionati, fn($p) => $p > 0);
-
-    if ($id_evento_settore <= 0 || empty($postiSelezionati)) {
-        $errore = "Seleziona almeno un posto valido.";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acquista') {
+    if ($ruolo !== 2) {
+        $errore = 'Solo gli utenti cliente possono acquistare biglietti.';
     } else {
-        $conn->begin_transaction();
+        $id_evento_settore = (int)($_POST['id_evento_settore'] ?? 0);
+        $postiSelezionati = $_POST['posti'] ?? [];
 
-        try {
-            $sqlSettore = "SELECT es.id, es.prezzo, es.posti_disponibili, es.posti_totali, s.nome AS nome_settore
-                           FROM evento_settore es
-                           JOIN settore s ON es.id_settore = s.id
-                           WHERE es.id = ?
-                           LIMIT 1
-                           FOR UPDATE";
-            $stmt = $conn->prepare($sqlSettore);
-            $stmt->bind_param("i", $id_evento_settore);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $settoreAcquisto = $result->fetch_assoc();
-            $stmt->close();
+        if (!is_array($postiSelezionati)) {
+            $postiSelezionati = [];
+        }
 
-            if (!$settoreAcquisto) {
-                throw new Exception("Settore non trovato.");
-            }
+        $postiSelezionati = array_values(array_unique(array_map('intval', $postiSelezionati)));
+        $postiSelezionati = array_values(array_filter($postiSelezionati, fn($p) => $p > 0));
 
-            $quantita = count($postiSelezionati);
+        if ($id_evento_settore <= 0 || empty($postiSelezionati)) {
+            $errore = 'Seleziona almeno un posto valido.';
+        } else {
+            try {
+                $pdo->beginTransaction();
 
-            if ((int)$settoreAcquisto['posti_disponibili'] < $quantita) {
-                throw new Exception("Non ci sono abbastanza posti disponibili per questa selezione.");
-            }
+                $sqlSettore = "SELECT es.id, es.prezzo, es.posti_disponibili, es.posti_totali, s.nome AS nome_settore
+                               FROM evento_settore es
+                               JOIN settore s ON es.id_settore = s.id
+                               WHERE es.id = ?
+                               LIMIT 1 FOR UPDATE";
+                $stmt = $pdo->prepare($sqlSettore);
+                $stmt->execute([$id_evento_settore]);
+                $settoreAcquisto = $stmt->fetch();
 
-            $stmt = $conn->prepare("SELECT posto FROM biglietto WHERE id_evento_settore = ?");
-            $stmt->bind_param("i", $id_evento_settore);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $occupati = [];
-            while ($row = $result->fetch_assoc()) {
-                $occupati[] = (int)$row['posto'];
-            }
-            $stmt->close();
-
-            foreach ($postiSelezionati as $posto) {
-                if ($posto > (int)$settoreAcquisto['posti_totali']) {
-                    throw new Exception("Uno dei posti selezionati non è valido.");
+                if (!$settoreAcquisto) {
+                    throw new Exception('Settore non trovato.');
                 }
-                if (in_array($posto, $occupati, true)) {
-                    throw new Exception("Uno dei posti selezionati è già stato prenotato.");
+
+                $quantita = count($postiSelezionati);
+
+                if ((int)$settoreAcquisto['posti_disponibili'] < $quantita) {
+                    throw new Exception('Non ci sono abbastanza posti disponibili per questa selezione.');
                 }
-            }
 
-            $prezzoUnitario = (float)$settoreAcquisto['prezzo'];
-            $prezzoTotale = $prezzoUnitario * $quantita;
+                $stmt = $pdo->prepare('SELECT posto FROM biglietto WHERE id_evento_settore = ?');
+                $stmt->execute([$id_evento_settore]);
+                $occupati = [];
+                foreach ($stmt->fetchAll() as $row) {
+                    $occupati[] = (int)$row['posto'];
+                }
 
-            if ((float)$user['saldo'] < $prezzoTotale) {
-                $conn->rollback();
-                header("Location: User_dashboard.php");
-                exit();
-            }
+                foreach ($postiSelezionati as $posto) {
+                    if ($posto > (int)$settoreAcquisto['posti_totali']) {
+                        throw new Exception('Uno dei posti selezionati non è valido.');
+                    }
+                    if (in_array($posto, $occupati, true)) {
+                        throw new Exception('Uno dei posti selezionati è già stato prenotato.');
+                    }
+                }
 
-            $stmt = $conn->prepare("UPDATE utente SET saldo = saldo - ? WHERE id = ?");
-            $stmt->bind_param("di", $prezzoTotale, $user['id']);
-            $stmt->execute();
-            $stmt->close();
+                $prezzoUnitario = (float)$settoreAcquisto['prezzo'];
+                $prezzoTotale = $prezzoUnitario * $quantita;
 
-            $stmt = $conn->prepare("UPDATE evento_settore SET posti_disponibili = posti_disponibili - ? WHERE id = ?");
-            $stmt->bind_param("ii", $quantita, $id_evento_settore);
-            $stmt->execute();
-            $stmt->close();
+                $stmt = $pdo->prepare('SELECT saldo FROM utente WHERE id = ? FOR UPDATE');
+                $stmt->execute([$user['id']]);
+                $saldoCorrente = (float)(($stmt->fetch()['saldo']) ?? 0);
 
-            $disponibilita = 1;
-            $ticketCreati = [];
+                if ($saldoCorrente < $prezzoTotale) {
+                    $pdo->rollBack();
+                    header('Location: User_dashboard.php');
+                    exit();
+                }
 
-            $stmt = $conn->prepare("INSERT INTO biglietto (sigillo_fiscale, disponibilita, id_utente, id_evento_settore, posto, prezzo)
-                                    VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $pdo->prepare('UPDATE utente SET saldo = saldo - ? WHERE id = ?');
+                $stmt->execute([$prezzoTotale, $user['id']]);
 
-            foreach ($postiSelezionati as $posto) {
-                $sigilloFiscale = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 15);
-                $stmt->bind_param("siiiid", $sigilloFiscale, $disponibilita, $user['id'], $id_evento_settore, $posto, $prezzoUnitario);
-                $stmt->execute();
+                $stmt = $pdo->prepare('UPDATE evento_settore SET posti_disponibili = posti_disponibili - ? WHERE id = ?');
+                $stmt->execute([$quantita, $id_evento_settore]);
 
-                $ticketCreati[] = [
-                    'sigillo_fiscale' => $sigilloFiscale,
-                    'posto' => $posto,
-                    'prezzo' => $prezzoUnitario
+                $disponibilita = 1;
+                $ticketCreati = [];
+                $stmt = $pdo->prepare('INSERT INTO biglietto (sigillo_fiscale, disponibilita, id_utente, id_evento_settore, posto, prezzo) VALUES (?, ?, ?, ?, ?, ?)');
+
+                foreach ($postiSelezionati as $posto) {
+                    $sigilloFiscale = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 15);
+                    $stmt->execute([$sigilloFiscale, $disponibilita, $user['id'], $id_evento_settore, $posto, $prezzoUnitario]);
+                    $ticketCreati[] = [
+                        'sigillo_fiscale' => $sigilloFiscale,
+                        'posto' => $posto,
+                        'prezzo' => $prezzoUnitario,
+                    ];
+                }
+
+                $_SESSION['ticket_info'] = [
+                    'settore' => $settoreAcquisto['nome_settore'],
+                    'evento' => $evento['titolo'],
+                    'quantita' => $quantita,
+                    'totale' => $prezzoTotale,
+                    'biglietti' => $ticketCreati,
                 ];
+
+                $pdo->commit();
+                header('Location: confirmation.php');
+                exit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $errore = $e->getMessage();
             }
-
-            $stmt->close();
-
-            $_SESSION['ticket_info'] = [
-                'settore' => $settoreAcquisto['nome_settore'],
-                'evento' => $evento['titolo'],
-                'quantita' => $quantita,
-                'totale' => $prezzoTotale,
-                'biglietti' => $ticketCreati
-            ];
-
-            $conn->commit();
-            header("Location: confirmation.php");
-            exit();
-
-        } catch (Exception $e) {
-            $conn->rollback();
-            $errore = $e->getMessage();
         }
     }
 }
-
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="it">
