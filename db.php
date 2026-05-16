@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
-$dbname = 'Easy'; // CORREZIONE: dal tuo file SQL
+$dbname = 'Easy';
 $user = 'root';
-$pass = 'root'; // Password MAMP
+$pass = 'root';
 $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
 
 try {
