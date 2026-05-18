@@ -127,6 +127,115 @@ if ($selectedSettore) {
 }
 
 $errore = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acquista') {
+    if ($ruolo !== 2) {
+        $errore = 'Solo gli utenti cliente possono acquistare biglietti.';
+    } else {
+        $id_evento_settore = (int)($_POST['id_evento_settore'] ?? 0);
+        $postiSelezionati = $_POST['posti'] ?? [];
+
+        if (!is_array($postiSelezionati)) {
+            $postiSelezionati = [];
+        }
+
+        $postiSelezionati = array_values(array_unique(array_map('intval', $postiSelezionati)));
+        $postiSelezionati = array_values(array_filter($postiSelezionati, fn($p) => $p > 0));
+
+        if ($id_evento_settore <= 0 || empty($postiSelezionati)) {
+            $errore = 'Seleziona almeno un posto valido.';
+        } else {
+            try {
+                $pdo->beginTransaction();
+
+                $sqlSettore = "SELECT es.id, es.prezzo, es.posti_disponibili, es.posti_totali, s.nome AS nome_settore
+                               FROM evento_settore es
+                               JOIN settore s ON es.id_settore = s.id
+                               WHERE es.id = ?
+                               LIMIT 1 FOR UPDATE";
+                $stmt = $pdo->prepare($sqlSettore);
+                $stmt->execute([$id_evento_settore]);
+                $settoreAcquisto = $stmt->fetch();
+
+                if (!$settoreAcquisto) {
+                    throw new Exception('Settore non trovato.');
+                }
+
+                $quantita = count($postiSelezionati);
+
+                if ((int)$settoreAcquisto['posti_disponibili'] < $quantita) {
+                    throw new Exception('Non ci sono abbastanza posti disponibili per questa selezione.');
+                }
+
+                $stmt = $pdo->prepare('SELECT posto FROM biglietto WHERE id_evento_settore = ?');
+                $stmt->execute([$id_evento_settore]);
+                $occupati = [];
+                foreach ($stmt->fetchAll() as $row) {
+                    $occupati[] = (int)$row['posto'];
+                }
+
+                foreach ($postiSelezionati as $posto) {
+                    if ($posto > (int)$settoreAcquisto['posti_totali']) {
+                        throw new Exception('Uno dei posti selezionati non è valido.');
+                    }
+                    if (in_array($posto, $occupati, true)) {
+                        throw new Exception('Uno dei posti selezionati è già stato prenotato.');
+                    }
+                }
+
+                $prezzoUnitario = (float)$settoreAcquisto['prezzo'];
+                $prezzoTotale = $prezzoUnitario * $quantita;
+
+                $stmt = $pdo->prepare('SELECT saldo FROM utente WHERE id = ? FOR UPDATE');
+                $stmt->execute([$user['id']]);
+                $saldoCorrente = (float)(($stmt->fetch()['saldo']) ?? 0);
+
+                if ($saldoCorrente < $prezzoTotale) {
+                    $pdo->rollBack();
+                    header('Location: User_dashboard.php');
+                    exit();
+                }
+
+                $stmt = $pdo->prepare('UPDATE utente SET saldo = saldo - ? WHERE id = ?');
+                $stmt->execute([$prezzoTotale, $user['id']]);
+
+                $stmt = $pdo->prepare('UPDATE evento_settore SET posti_disponibili = posti_disponibili - ? WHERE id = ?');
+                $stmt->execute([$quantita, $id_evento_settore]);
+
+                $disponibilita = 1;
+                $ticketCreati = [];
+                $stmt = $pdo->prepare('INSERT INTO biglietto (sigillo_fiscale, disponibilita, id_utente, id_evento_settore, posto, prezzo) VALUES (?, ?, ?, ?, ?, ?)');
+
+                foreach ($postiSelezionati as $posto) {
+                    $sigilloFiscale = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 15);
+                    $stmt->execute([$sigilloFiscale, $disponibilita, $user['id'], $id_evento_settore, $posto, $prezzoUnitario]);
+                    $ticketCreati[] = [
+                        'sigillo_fiscale' => $sigilloFiscale,
+                        'posto' => $posto,
+                        'prezzo' => $prezzoUnitario,
+                    ];
+                }
+
+                $_SESSION['ticket_info'] = [
+                    'settore' => $settoreAcquisto['nome_settore'],
+                    'evento' => $evento['titolo'],
+                    'quantita' => $quantita,
+                    'totale' => $prezzoTotale,
+                    'biglietti' => $ticketCreati,
+                ];
+
+                $pdo->commit();
+                header('Location: confirmation.php');
+                exit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $errore = $e->getMessage();
+            }
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -134,8 +243,7 @@ $errore = '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($evento['titolo']); ?> - EasyTicket</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/public.css">
+    <link rel="stylesheet" href="css/style1.css?v=40">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body>
@@ -239,12 +347,10 @@ $errore = '';
                             </div>
 
                             <div>
-                                <button
-                                    type="button"
-                                    class="hero-cta replica-button"
-                                    data-replica-id="<?php echo (int)$replica['id']; ?>"
-                                    data-replica-label="<?php echo htmlspecialchars(formatDataReplica($replica['data_ora_inizio'])); ?>"
-                                    >
+                                <<button
+                                        type="button"
+                                        class="hero-cta replica-button"
+                                        onclick="window.location.href='evento.php?id=<?php echo $id_evento; ?>&replica=<?php echo (int)$replica['id']; ?>#sector-list'">
                                     Seleziona
                                 </button>
                             </div>
@@ -266,61 +372,131 @@ $errore = '';
     </div>
 
     <div class="matches-grid" id="sector-list">
-        <div class="empty-state">
-            <h3>Nessun settore selezionato</h3>
-            <p>Scegli prima una replica per vedere i settori disponibili.</p>
-        </div>
+        <?php if (!empty($settori)): ?>
+            <?php foreach ($settori as $settore): ?>
+                <div class="match-card">
+                    <div class="match-card-top">
+                        <span class="match-badge"><?php echo htmlspecialchars($settore['nome_settore']); ?></span>
+                        <span class="match-date">€ <?php echo number_format((float)$settore['prezzo'], 2, ',', '.'); ?></span>
+                    </div>
+
+                    <div class="match-details" style="padding-top: 18px;">
+                        <h3><?php echo htmlspecialchars($settore['nome_settore']); ?></h3>
+                        <p>Posti disponibili: <?php echo (int)$settore['posti_disponibili']; ?> / <?php echo (int)$settore['posti_totali']; ?></p>
+                    </div>
+
+                    <div class="match-card-bottom">
+                        <button
+                            type="button"
+                            class="match-action sector-button"
+                            onclick="window.location.href='evento.php?id=<?php echo $id_evento; ?>&replica=<?php echo $id_replica; ?>&settore=<?php echo (int)$settore['id']; ?>#ticket-app'">
+                            Scegli questo settore
+                        </button>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="empty-state">
+                <h3>Nessun settore selezionato</h3>
+                <p>Scegli prima una replica per vedere i settori disponibili.</p>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 
-        <section class="section-block" id="purchase-section" style="display:none;">
-    <div class="section-heading">
-        <h2>Completa acquisto</h2>
-        <p>
-            Settore selezionato:
-            <span id="purchase-settore">-</span>
-            · Prezzo per biglietto: €
-            <span id="purchase-prezzo">-</span>
-        </p>
-    </div>
+        <?php if ($selectedSettore): ?>
+            <section class="section-block">
+                <div class="section-heading">
+                    <h2>Completa acquisto</h2>
+                    <p>
+                        Settore selezionato: <?php echo htmlspecialchars($selectedSettore['nome_settore']); ?>
+                        · Prezzo per biglietto: € <?php echo number_format((float)$selectedSettore['prezzo'], 2, ',', '.'); ?>
+                    </p>
+                </div>
 
-    <?php if (!empty($errore)): ?>
-        <div class="admin-card" style="border-color:#f1d1ca; color:#c13d2a; margin-bottom:20px;">
-            <?php echo htmlspecialchars($errore); ?>
-        </div>
-    <?php endif; ?>
+                <?php if (!empty($errore)): ?>
+                    <div class="admin-card" style="border-color:#f1d1ca; color:#c13d2a; margin-bottom:20px;">
+                        <?php echo htmlspecialchars($errore); ?>
+                    </div>
+                <?php endif; ?>
 
-    <form action="checkout.php" method="post" class="admin-card" id="purchase-form">
-    <input type="hidden" name="azione" value="acquista">
-    <input type="hidden" name="id_evento" value="<?php echo (int)$id_evento; ?>">
-    <input type="hidden" name="id_evento_settore" id="selected-evento-settore" value="0">
-    <input type="hidden" name="prezzo" id="purchase-prezzo-hidden" value="">
-    <input type="hidden" name="posti" id="purchase-posti-hidden" value="">
+                <?php if ((int)$selectedSettore['posti_disponibili'] <= 0): ?>
+                    <div class="empty-state">
+                        <h3>Posti finiti</h3>
+                        <p>Non ci sono più posti disponibili per questo settore.</p>
+                    </div>
+                <?php else: ?>
+                    <form method="post" class="admin-card" id="ticket-app">
+                        <input type="hidden" name="azione" value="acquista">
+                        <input type="hidden" name="id_evento_settore" value="<?php echo (int)$selectedSettore['id']; ?>">
 
-    <div class="admin-form-group">
-        <label>Seleziona i posti</label>
-        <div class="seat-grid" id="seat-grid"></div>
-        <small class="seat-legend">Grigio chiaro = disponibile · Arancione = selezionato · Rosso = occupato</small>
-    </div>
+                        <div class="admin-form-group">
+                            <label>Seleziona i posti</label>
+                            <div class="seat-grid">
+                                <?php for ($i = 1; $i <= (int)$selectedSettore['posti_totali']; $i++): ?>
+                                    <?php $occupato = in_array($i, $postiOccupati, true); ?>
+                                    <?php if ($occupato): ?>
+                                        <span class="seat-pill seat-occupied">P<?php echo $i; ?></span>
+                                    <?php else: ?>
+                                        <label class="seat-pill seat-available">
+                                            <input type="checkbox" name="posti[]" value="<?php echo $i; ?>" v-model="postiSelezionati">
+                                            <span>P<?php echo $i; ?></span>
+                                        </label>
+                                    <?php endif; ?>
+                                <?php endfor; ?>
+                            </div>
+                            <small class="seat-legend">Blu chiaro = disponibile · Arancione = selezionato · Grigio = occupato</small>
+                        </div>
 
-    <div class="admin-form-group">
-        <label>Prezzo per biglietto</label>
-        <input type="text" id="purchase-prezzo-input" value="" readonly>
-    </div>
+                        <div class="admin-form-group">
+                            <label>Prezzo per biglietto</label>
+                            <input type="text" value="€ <?php echo number_format((float)$selectedSettore['prezzo'], 2, ',', '.'); ?>" readonly>
+                        </div>
+                        <div class="admin-form-group" v-if="postiSelezionati.length > 0">
+                            <label style="color: #f39a05;">Totale Preventivo ({{ postiSelezionati.length }} biglietti)</label>
+                            <input type="text" :value="'€ ' + (postiSelezionati.length * <?php echo (float)$selectedSettore['prezzo']; ?>).toFixed(2)" readonly style="background: #fff8eb; border: 2px solid #f39a05; font-weight: bold; font-size: 1.1em; color: #13293d;">
+                        </div>
+                        <div class="admin-form-group">
+                            <label>Posti disponibili</label>
+                            <input type="text" value="<?php echo (int)$selectedSettore['posti_disponibili']; ?>" readonly>
+                        </div>
 
-    <div class="admin-form-group">
-        <label>Posti selezionati</label>
-        <input type="text" id="purchase-posti-display" value="" readonly>
-    </div>
-
-    <button type="submit" class="admin-submit">Acquista biglietti</button>
-</form>
-</section>
+                        <button type="submit" class="admin-submit">Acquista biglietti</button>
+                    </form>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
     </main>
 
     <footer class="site-footer">
         <p>&copy; 2026 EasyTicket</p>
     </footer>
-    <script src="js/evento.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startVue = () => {
+                const ticketApp = document.getElementById('ticket-app');
+                // Se il form esiste nel DOM e Vue non è ancora stato montato
+                if (ticketApp && !ticketApp.hasAttribute('data-v-app')) {
+                    Vue.createApp({
+                        data() {
+                            return {
+                                postiSelezionati: [] 
+                            }
+                        }
+                    }).mount('#ticket-app');
+                }
+            };
+
+            // Tenta l'avvio immediato al caricamento
+            startVue();
+
+            // MutationObserver: Spia il DOM e avvia Vue dinamicamente appena il form viene generato
+            const observer = new MutationObserver(startVue);
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+    </script>
+    
+    
 </body>
 </html>
