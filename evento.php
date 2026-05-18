@@ -135,7 +135,7 @@ $errore = '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($evento['titolo']); ?> - EasyTicket</title>
     <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" hred="css/public.css">
+    <link rel="stylesheet" href="css/public.css">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body>

@@ -208,7 +208,9 @@ $eventi = $pdo->query("
                 <div class="admin-form-group"><label>Orario spettacolo</label><input type="time" name="orario_spettacolo" required></div>
             </div>
 
-            <div class="section-heading" style="margin-top:24px"><h2>Settori</h2></div>
+            <div class="section-heading section-heading-spaced">
+                <h2>Settori</h2>
+            </div>
             <div id="settori-builder" class="settori-builder">
                 <div class="settore-row">
                     <div>
@@ -225,7 +227,7 @@ $eventi = $pdo->query("
                     <div><button type="button" class="row-remove-btn" onclick="removeRow(this)">✕</button></div>
                 </div>
             </div>
-            <div style="margin-top:12px" class="dashboard-actions">
+            <div class="dashboard-actions dashboard-actions-spaced">
                 <button type="button" class="secondary-btn" onclick="addRow()">+ Aggiungi settore</button>
                 <button type="submit" class="admin-submit">Crea evento</button>
             </div>
