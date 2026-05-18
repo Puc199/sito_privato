@@ -90,38 +90,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    sectorList.addEventListener('click', (e) => {
-        const button = e.target.closest('.sector-button');
-        if (!button) return;
+    sectorList.addEventListener('click', async (e) => {
+    const button = e.target.closest('.sector-button');
+    if (!button) return;
 
-        e.preventDefault();
+    e.preventDefault();
 
-        const settoreId = button.dataset.settoreId;
-        const settoreNome = button.dataset.settoreNome;
-        const settorePrezzo = Number.parseFloat(button.dataset.settorePrezzo || 0).toFixed(2).replace('.', ',');
-        const settoreDisponibili = button.dataset.settoreDisponibili;
-        const settoreTotali = parseInt(button.dataset.settoreTotali || 0, 10);
+    const settoreId = button.dataset.settoreId;
+    const settoreNome = button.dataset.settoreNome;
+    const settorePrezzo = Number.parseFloat(button.dataset.settorePrezzo || 0).toFixed(2).replace('.', ',');
+    const settoreDisponibili = button.dataset.settoreDisponibili;
+    const settoreTotali = parseInt(button.dataset.settoreTotali || 0, 10);
 
-        if (purchaseSection) purchaseSection.style.display = '';
-        if (purchaseSettore) purchaseSettore.textContent = settoreNome;
-        if (purchasePrezzo) purchasePrezzo.textContent = settorePrezzo;
-        if (purchasePrezzoInput) purchasePrezzoInput.value = `€ ${settorePrezzo}`;
-        if (purchasePosti) purchasePosti.value = settoreDisponibili;
-        if (selectedEventoSettore) selectedEventoSettore.value = settoreId;
+    if (purchaseSection) purchaseSection.style.display = '';
+    if (purchaseSettore) purchaseSettore.textContent = settoreNome;
+    if (purchasePrezzo) purchasePrezzo.textContent = settorePrezzo;
+    if (purchasePrezzoInput) purchasePrezzoInput.value = `€ ${settorePrezzo}`;
+    if (purchasePosti) purchasePosti.value = settoreDisponibili;
+    if (selectedEventoSettore) selectedEventoSettore.value = settoreId;
+
+    if (seatGrid) {
+        seatGrid.innerHTML = '<p>Caricamento posti...</p>';
+    }
+
+    try {
+        const response = await fetch(`ajax_posti_settore.php?id_evento_settore=${encodeURIComponent(settoreId)}`);
+        const data = await response.json();
+
+        const postiOccupati = (data.success && Array.isArray(data.posti_occupati))
+            ? data.posti_occupati.map(Number)
+            : [];
 
         if (seatGrid) {
             seatGrid.innerHTML = '';
+
             for (let i = 1; i <= settoreTotali; i++) {
-                const label = document.createElement('label');
-                label.className = 'seat-pill seat-available';
-                label.innerHTML = `
-                    <input type="checkbox" name="posti[]" value="${i}">
-                    <span>P${i}</span>
-                `;
-                seatGrid.appendChild(label);
+                if (postiOccupati.includes(i)) {
+                    const span = document.createElement('span');
+                    span.className = 'seat-pill seat-occupied';
+                    span.textContent = `P${i}`;
+                    seatGrid.appendChild(span);
+                } else {
+                    const label = document.createElement('label');
+                    label.className = 'seat-pill seat-available';
+                    label.innerHTML = `
+                        <input type="checkbox" name="posti[]" value="${i}">
+                        <span>P${i}</span>
+                    `;
+                    seatGrid.appendChild(label);
+                }
             }
         }
+    } catch (error) {
+        if (seatGrid) {
+            seatGrid.innerHTML = '<p>Errore nel caricamento dei posti.</p>';
+        }
+    }
 
-        purchaseSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    purchaseSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 });
