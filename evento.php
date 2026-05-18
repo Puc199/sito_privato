@@ -361,39 +361,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
             <?php endif; ?>
         </section>
 
+        <section class="section-block">
+    <div class="section-heading">
+        <h2>Scegli il settore</h2>
+        <p>
+            Replica selezionata:
+            <span id="replica-riepilogo">
+                <?php echo $replicaSelezionata ? htmlspecialchars(formatDataReplica($replicaSelezionata['data_ora_inizio'])) : 'Nessuna replica selezionata'; ?>
+            </span>
+        </p>
+    </div>
+
+    <div class="matches-grid" id="sector-list">
         <?php if (!empty($settori)): ?>
-            <section class="section-block">
-                <div class="section-heading">
-                    <h2>Scegli il settore</h2>
-                    <p>
-                        Replica selezionata:
-                        <?php echo $replicaSelezionata ? formatDataReplica($replicaSelezionata['data_ora_inizio']) : 'Nessuna replica selezionata'; ?>
-                    </p>
+            <?php foreach ($settori as $settore): ?>
+                <div class="match-card">
+                    <div class="match-card-top">
+                        <span class="match-badge"><?php echo htmlspecialchars($settore['nome_settore']); ?></span>
+                        <span class="match-date">€ <?php echo number_format((float)$settore['prezzo'], 2, ',', '.'); ?></span>
+                    </div>
+
+                    <div class="match-details" style="padding-top: 18px;">
+                        <h3><?php echo htmlspecialchars($settore['nome_settore']); ?></h3>
+                        <p>Posti disponibili: <?php echo (int)$settore['posti_disponibili']; ?> / <?php echo (int)$settore['posti_totali']; ?></p>
+                    </div>
+
+                    <div class="match-card-bottom">
+                        <button
+                            type="button"
+                            class="match-action sector-button"
+                            data-settore-id="<?php echo (int)$settore['id']; ?>"
+                            data-settore-nome="<?php echo htmlspecialchars($settore['nome_settore']); ?>"
+                            data-settore-prezzo="<?php echo (float)$settore['prezzo']; ?>"
+                            data-settore-disponibili="<?php echo (int)$settore['posti_disponibili']; ?>"
+                            data-settore-totali="<?php echo (int)$settore['posti_totali']; ?>"
+                        >
+                            Scegli questo settore
+                        </button>
+                    </div>
                 </div>
-
-                <div class="matches-grid">
-                    <?php foreach ($settori as $settore): ?>
-                        <div class="match-card">
-                            <div class="match-card-top">
-                                <span class="match-badge"><?php echo htmlspecialchars($settore['nome_settore']); ?></span>
-                                <span class="match-date">€ <?php echo number_format((float)$settore['prezzo'], 2, ',', '.'); ?></span>
-                            </div>
-
-                            <div class="match-details" style="padding-top: 18px;">
-                                <h3><?php echo htmlspecialchars($settore['nome_settore']); ?></h3>
-                                <p>Posti disponibili: <?php echo (int)$settore['posti_disponibili']; ?> / <?php echo (int)$settore['posti_totali']; ?></p>
-                            </div>
-
-                            <div class="match-card-bottom">
-                                <a class="match-action" href="evento.php?id=<?php echo $id_evento; ?>&replica=<?php echo $id_replica; ?>&settore=<?php echo (int)$settore['id']; ?>">
-                                    Scegli questo settore
-                                </a>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="empty-state">
+                <h3>Nessun settore selezionato</h3>
+                <p>Scegli prima una replica per vedere i settori disponibili.</p>
+            </div>
         <?php endif; ?>
+    </div>
+</section>
 
         <?php if ($selectedSettore): ?>
             <section class="section-block">
