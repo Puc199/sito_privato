@@ -74,8 +74,8 @@ foreach ($biglietti as $biglietto) {
     <main class="page-shell">
         <section class="section-block">
             <div class="section-heading">
-                <h2>Ciao <?php echo htmlspecialchars($utente['username']); ?>, bentornato</h2>
-                <p>Controlla i tuoi biglietti e ricarica il wallet.</p>
+                <h2>Ciao <?php echo htmlspecialchars($utente['username']); ?></h2>
+                <p>Controlla il tuo saldo, i tuoi biglietti e ricarica il wallet.</p>
             </div>
 
             <div class="admin-grid">
