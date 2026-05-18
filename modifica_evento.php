@@ -9,10 +9,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || (int)($_S
     exit();
 }
 
-function esc($v) {
-    return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
-}
-
 function salvaImmagine(?array $file): ?string {
     if (!$file || $file['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
