@@ -24,19 +24,19 @@ if (!$utente) {
 $stmt = $pdo->prepare("
     SELECT 
         b.id,
-        e.nome AS evento_nome,
-        r.data AS data_evento,
+        e.titolo AS evento_nome,
+        r.data_ora_inizio AS data_evento,
         s.nome AS settore_nome,
         b.posto,
         b.prezzo,
-        b.sigillo
+        b.sigillo_fiscale
     FROM biglietto b
     JOIN evento_settore es ON b.id_evento_settore = es.id
-    JOIN replica r ON es.id_replica = r.id
-    JOIN evento e ON r.id_evento = e.id
+    JOIN replica_evento r ON es.id_replica_evento = r.id
+    JOIN evento e ON es.id_evento = e.id
     JOIN settore s ON es.id_settore = s.id
     WHERE b.id_utente = ?
-    ORDER BY r.data DESC, e.nome ASC
+    ORDER BY r.data_ora_inizio DESC, e.titolo ASC
 ");
 $stmt->execute([$utente['id']]);
 $biglietti = $stmt->fetchAll();
@@ -172,7 +172,7 @@ foreach ($biglietti as $biglietto) {
                                     <td><?php echo htmlspecialchars($biglietto['settore_nome']); ?></td>
                                     <td><?php echo htmlspecialchars($biglietto['posto']); ?></td>
                                     <td>€ <?php echo number_format((float)$biglietto['prezzo'], 2, ',', '.'); ?></td>
-                                    <td><?php echo htmlspecialchars($biglietto['sigillo']); ?></td>
+                                    <td><?php echo htmlspecialchars($biglietto['sigillo_fiscale']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
