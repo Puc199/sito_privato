@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recupera password - EasyTicket</title>
     <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/login.css">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body class="auth-page">
@@ -54,9 +54,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <main class="login-shell">
         <div class="login-card">
             <div class="login-brand">
-                <img src="img/logosito.png" alt="Logo EasyTicket">
+                <img src="img/logo_sito.png" alt="Logo EasyTicket">
                 <h1>Recupera password</h1>
-                <p>Inserisci il tuo username e scegli una nuova password per accedere di nuovo al tuo account.</p>
             </div>
 
             <?php if (!empty($reset_error)): ?>
@@ -103,7 +102,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <div class="login-links">
                 <a href="login.php">Torna al login</a>
-                <a href="registra.php">Crea account</a>
             </div>
         </div>
     </main>

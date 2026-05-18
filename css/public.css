@@ -1,0 +1,335 @@
+/* =========================
+   HOME.PHP
+   HERO
+========================= */
+
+.hero-section {
+    position: relative;
+    min-height: 360px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+    background-size: 120%;
+    background-position: center 72%;
+    background-repeat: no-repeat;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8, 34, 56, 0.04), rgba(8, 34, 56, 0.20));
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    color: #fff;
+}
+
+.hero-content h1 {
+    margin: 0 0 14px;
+    font-size: clamp(2rem, 4vw, 3.3rem);
+    line-height: 1.1;
+    text-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.hero-content p {
+    margin: 0 auto 26px;
+    font-size: 1.1rem;
+    max-width: 640px;
+    line-height: 1.6;
+}
+
+/* =========================
+   HOME.PHP
+   CATEGORIE
+========================= */
+
+.category-bar {
+    margin-top: 18px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.category-item,
+.category-search {
+    padding: 14px 16px;
+    border-radius: 14px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.category-item {
+    background: #f8fbfe;
+    color: var(--color-text);
+    border: 1px solid #e4edf4;
+}
+
+.category-search {
+    background: linear-gradient(180deg, #f7a61b 0%, var(--color-accent) 100%);
+    color: #fff;
+}
+
+/* =========================
+   HOME.PHP
+   CARD EVENTI
+========================= */
+
+.matches-grid {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 22px;
+}
+
+.match-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.match-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.match-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 0;
+}
+
+.match-badge {
+    background: var(--color-accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 8px 12px;
+    border-radius: 999px;
+}
+
+.match-date {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.match-logos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 22px 20px 14px;
+    min-height: 150px;
+}
+
+.match-logos img {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 50%;
+    padding: 8px;
+    border: 1px solid #ebf1f6;
+}
+
+.vs-text {
+    font-weight: 800;
+    color: var(--color-primary);
+    letter-spacing: 1px;
+}
+
+.match-details {
+    text-align: center;
+    padding: 0 20px 12px;
+}
+
+.match-details h3 {
+    margin: 0 0 8px;
+    font-size: 1.3rem;
+    color: #0c2840;
+}
+
+.match-details p {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.match-card-bottom {
+    padding: 18px 20px 22px;
+    display: flex;
+    justify-content: center;
+}
+
+/* =========================
+   EVENTO.PHP
+   REPLICHE / SETTORI
+========================= */
+
+.replica-grid,
+.sector-grid {
+    margin-top: 18px;
+    display: grid;
+    gap: 16px;
+}
+
+.replica-button,
+.sector-card {
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: var(--shadow-sm);
+    transition: 0.2s ease;
+}
+
+.replica-button:hover,
+.sector-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.replica-button.active,
+.sector-card.active {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(11, 95, 151, 0.10);
+}
+
+.replica-riepilogo,
+.purchase-summary {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: #f8fbfe;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+
+/* =========================
+   EVENTO.PHP
+   SELEZIONE POSTI
+========================= */
+
+.seat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.seat-pill {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 54px;
+    border-radius: 14px;
+    font-weight: 700;
+    border: 1px solid var(--color-border);
+    transition: all 0.2s ease;
+}
+
+.seat-pill input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.seat-available {
+    background: #eef4f8;
+    color: var(--color-primary);
+    cursor: pointer;
+    border: 1px solid #cfe0ec;
+}
+
+.seat-available:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+    background: #eaf4fb;
+}
+
+.seat-available input:checked + span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 54px;
+    border-radius: 14px;
+    background: var(--color-accent);
+    color: #fff;
+}
+
+.seat-occupied {
+    background: #fde9e6;
+    color: #9b3131;
+    border: 1px solid #f1d1ca;
+    cursor: not-allowed;
+}
+
+.seat-legend {
+    display: block;
+    margin-top: 10px;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+}
+
+/* =========================
+   EVENTO.PHP
+   FORM ACQUISTO
+========================= */
+
+.purchase-box {
+    margin-top: 24px;
+}
+
+.purchase-box .admin-card {
+    padding: 22px;
+}
+
+/* =========================
+   RESPONSIVE PUBLIC
+========================= */
+
+@media (max-width: 980px) {
+    .category-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .hero-section {
+        min-height: 300px;
+        padding: 22px;
+    }
+
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+
+    .category-bar {
+        grid-template-columns: 1fr;
+    }
+
+    .matches-grid {
+        grid-template-columns: 1fr;
+    }
+}

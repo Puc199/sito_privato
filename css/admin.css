@@ -1,0 +1,323 @@
+/* =========================
+   ADMIN_DASHBOARD.PHP
+   STRUTTURA GENERALE
+========================= */
+
+.admin-shell {
+    margin-top: 26px;
+}
+
+.admin-panel {
+    margin-top: 26px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+}
+
+.admin-panel h2 {
+    margin: 0;
+    font-size: 2rem;
+    color: #081f34;
+}
+
+.admin-panel > p {
+    margin: 8px 0 0;
+    color: var(--color-text-muted);
+}
+
+.admin-grid {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    gap: 24px;
+}
+
+.admin-card h3 {
+    margin: 0 0 18px;
+    font-size: 1.25rem;
+    color: #0c2840;
+}
+
+/* =========================
+   ADMIN FORM E BOTTONI
+========================= */
+
+.admin-submit,
+.admin-delete {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-weight: 700;
+    font-size: 0.98rem;
+    cursor: pointer;
+}
+
+.admin-submit {
+    background: linear-gradient(180deg, #f7a61b 0%, var(--color-accent) 100%);
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(243, 154, 5, 0.22);
+}
+
+.admin-submit:hover {
+    background: linear-gradient(180deg, #f0a000 0%, var(--color-accent-dark) 100%);
+}
+
+.admin-delete {
+    background: #eef3f8;
+    color: #c13d2a;
+    border: 1px solid #f1d1ca;
+}
+
+.admin-delete:hover {
+    background: #fdebe7;
+}
+
+.secondary-btn {
+    background: #eef4fa;
+    color: #17324d;
+    border: 1px solid #d9e0e8;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.row-remove-btn {
+    background: #d84b38;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+/* =========================
+   ADMIN PREVIEW
+========================= */
+
+.admin-preview-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.admin-preview-image {
+    width: 100%;
+    height: 220px;
+    background: #eef4f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.admin-preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-preview-body {
+    padding: 20px;
+}
+
+.admin-preview-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.admin-preview-badge {
+    background: var(--color-accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 999px;
+}
+
+.admin-preview-date {
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.admin-preview-body h4 {
+    margin: 0 0 8px;
+    font-size: 1.3rem;
+    color: #0c2840;
+}
+
+.admin-preview-body p {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+/* =========================
+   ADMIN LISTE / EVENTI
+========================= */
+
+.admin-list {
+    margin-top: 24px;
+    display: grid;
+    gap: 16px;
+}
+
+.admin-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+}
+
+.admin-list-item strong {
+    display: block;
+    color: #0c2840;
+    margin-bottom: 4px;
+}
+
+.admin-list-item span {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+}
+
+.admin-empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: 24px 12px;
+}
+
+/* =========================
+   ADMIN_DASHBOARD.PHP
+   BUILDER SETTORI / TABELLE
+========================= */
+
+.range-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.settori-builder {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.settore-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+    padding: 14px;
+    border: 1px solid #d9e0e8;
+    border-radius: 12px;
+    background: #f8fbff;
+}
+
+.mini-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #17324d;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e7edf3;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.admin-table th {
+    background: #f4f8fc;
+    font-size: 13px;
+}
+
+.thumb-evento {
+    width: 80px;
+    height: 52px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* =========================
+   MESSAGGI ADMIN
+========================= */
+
+.msg-ok {
+    border-color: #cfe8d3 !important;
+    color: #277243 !important;
+    background: #f3fbf4;
+}
+
+.msg-ko {
+    border-color: #f1d1ca !important;
+    color: #c13d2a !important;
+    background: #fff7f5;
+}
+
+/* =========================
+   MODIFICA_EVENTO.PHP
+========================= */
+
+.repliche-grid,
+.repliche-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 18px;
+}
+
+/* =========================
+   RESPONSIVE ADMIN
+========================= */
+
+@media (max-width: 980px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-list-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 768px) {
+    .settore-row {
+        grid-template-columns: 1fr;
+    }
+}

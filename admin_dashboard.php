@@ -144,25 +144,9 @@ $eventi = $pdo->query("
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Admin Dashboard - EasyTicket</title>
-    <link rel="stylesheet" href="css/style1.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel= "stylesheet" href="css/admin.css">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
-    <style>
-        .range-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
-        .settori-builder{display:grid;gap:12px;margin-top:16px}
-        .settore-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end;padding:14px;border:1px solid #d9e0e8;border-radius:12px;background:#f8fbff}
-        .mini-label{display:block;margin-bottom:5px;font-weight:600;font-size:13px;color:#17324d}
-        .row-remove-btn{background:#d84b38;color:#fff;border:none;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700}
-        .secondary-btn{background:#eef4fa;color:#17324d;border:1px solid #d9e0e8;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:700}
-        .table-wrap{overflow-x:auto}
-        .admin-table{width:100%;border-collapse:collapse}
-        .admin-table th,.admin-table td{padding:12px;border-bottom:1px solid #e7edf3;text-align:left;vertical-align:middle}
-        .admin-table th{background:#f4f8fc;font-size:13px}
-        .thumb-evento{width:80px;height:52px;object-fit:cover;border-radius:8px}
-        .msg-ok{border-color:#cfe8d3!important;color:#277243!important;background:#f3fbf4}
-        .msg-ko{border-color:#f1d1ca!important;color:#c13d2a!important;background:#fff7f5}
-        .dashboard-actions{display:flex;gap:8px;flex-wrap:wrap}
-        @media(max-width:768px){.settore-row{grid-template-columns:1fr}}
-    </style>
 </head>
 <body>
 <header class="site-header">
