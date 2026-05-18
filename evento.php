@@ -418,7 +418,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
             <input type="text" id="purchase-posti" value="" readonly>
         </div>
 
-        <button type="submit" class="admin-submit">Acquista biglietti</button>
+        <a href = checkout.php \a> <button type="submit" class="admin-submit">Acquista biglietti</button>
     </form>
 </section>
     </main>
