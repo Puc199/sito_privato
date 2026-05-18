@@ -36,4 +36,3 @@ function checkRoleAndRedirect(ruolo) {
         window.location.href = 'ricarica_saldo.php'; // Sostituisci con il link effettivo della pagina utente
     }
 }
-
