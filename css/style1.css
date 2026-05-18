@@ -608,7 +608,7 @@ body {
 }
 
 .seat-occupied {
-  background: #eef2f5;
+  background: #9b251b;
   color: #9b3131;
   border: 1px solid #d8e1e8;
   cursor: not-allowed;
