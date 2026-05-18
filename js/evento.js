@@ -21,9 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             replicaButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
 
-            if (replicaRiepilogo) {
-                replicaRiepilogo.textContent = labelReplica;
-            }
+            if (replicaRiepilogo) replicaRiepilogo.textContent = labelReplica;
 
             sectorList.innerHTML = `
                 <div class="empty-state">
@@ -59,12 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="match-badge">${settore.nome_settore}</span>
                             <span class="match-date">€ ${prezzo}</span>
                         </div>
-
                         <div class="match-details" style="padding-top: 18px;">
                             <h3>${settore.nome_settore}</h3>
                             <p>Posti disponibili: ${settore.posti_disponibili} / ${settore.posti_totali}</p>
                         </div>
-
                         <div class="match-card-bottom">
                             <button
                                 type="button"
@@ -83,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     sectorList.appendChild(card);
                 });
 
-                bindSectorButtons();
             } catch (error) {
                 sectorList.innerHTML = `
                     <div class="empty-state">
@@ -95,44 +90,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    function bindSectorButtons() {
-        const sectorButtons = document.querySelectorAll('.sector-button');
+    sectorList.addEventListener('click', (e) => {
+        const button = e.target.closest('.sector-button');
+        if (!button) return;
 
-        sectorButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const settoreId = button.dataset.settoreId;
-                const settoreNome = button.dataset.settoreNome;
-                const settorePrezzo = Number.parseFloat(button.dataset.settorePrezzo || 0).toFixed(2).replace('.', ',');
-                const settoreDisponibili = button.dataset.settoreDisponibili;
-                const settoreTotali = parseInt(button.dataset.settoreTotali || 0, 10);
+        e.preventDefault();
 
-                if (purchaseSection) {
-                    purchaseSection.style.display = '';
-                }
+        const settoreId = button.dataset.settoreId;
+        const settoreNome = button.dataset.settoreNome;
+        const settorePrezzo = Number.parseFloat(button.dataset.settorePrezzo || 0).toFixed(2).replace('.', ',');
+        const settoreDisponibili = button.dataset.settoreDisponibili;
+        const settoreTotali = parseInt(button.dataset.settoreTotali || 0, 10);
 
-                if (purchaseSettore) purchaseSettore.textContent = settoreNome;
-                if (purchasePrezzo) purchasePrezzo.textContent = settorePrezzo;
-                if (purchasePrezzoInput) purchasePrezzoInput.value = `€ ${settorePrezzo}`;
-                if (purchasePosti) purchasePosti.value = settoreDisponibili;
-                if (selectedEventoSettore) selectedEventoSettore.value = settoreId;
+        if (purchaseSection) purchaseSection.style.display = '';
+        if (purchaseSettore) purchaseSettore.textContent = settoreNome;
+        if (purchasePrezzo) purchasePrezzo.textContent = settorePrezzo;
+        if (purchasePrezzoInput) purchasePrezzoInput.value = `€ ${settorePrezzo}`;
+        if (purchasePosti) purchasePosti.value = settoreDisponibili;
+        if (selectedEventoSettore) selectedEventoSettore.value = settoreId;
 
-                if (seatGrid) {
-                    seatGrid.innerHTML = '';
-                    for (let i = 1; i <= settoreTotali; i++) {
-                        const label = document.createElement('label');
-                        label.className = 'seat-pill seat-available';
-                        label.innerHTML = `
-                            <input type="checkbox" name="posti[]" value="${i}">
-                            <span>P${i}</span>
-                        `;
-                        seatGrid.appendChild(label);
-                    }
-                }
+        if (seatGrid) {
+            seatGrid.innerHTML = '';
+            for (let i = 1; i <= settoreTotali; i++) {
+                const label = document.createElement('label');
+                label.className = 'seat-pill seat-available';
+                label.innerHTML = `
+                    <input type="checkbox" name="posti[]" value="${i}">
+                    <span>P${i}</span>
+                `;
+                seatGrid.appendChild(label);
+            }
+        }
 
-                purchaseSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-        });
-    }
-
-    bindSectorButtons();
+        purchaseSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 });
