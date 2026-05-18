@@ -255,9 +255,6 @@ $primaData = $stmt->fetchColumn();
                         <?php endforeach; ?>
                     </select>
 
-                    <label for="data_evento">Data principale evento</label>
-                    <input type="datetime-local" id="data_evento" name="data_evento" value="<?php echo $dataEventoInput; ?>" required>
-
                     <label for="immagine">Nuova immagine evento</label>
                     <input type="file" id="immagine" name="immagine" accept="image/*">
 
@@ -275,7 +272,7 @@ $primaData = $stmt->fetchColumn();
 
                 <p><strong><?php echo esc($evento['titolo']); ?></strong></p>
                 <p><?php echo esc($evento['descrizione'] ?? 'Nessuna descrizione'); ?></p>
-                <p>Data principale: <?php echo esc($evento['data_evento']); ?></p>
+                <p>Prima replica: <?php echo $primaData ? esc($primaData) : 'Nessuna replica'; ?></p>
             </div>
         </div>
     </section>
