@@ -43,4 +43,3 @@ try {
         'message' => 'Errore nel caricamento dei settori.'
     ]);
 }
-?>

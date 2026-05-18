@@ -348,12 +348,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
 
                             <div>
                                 <button
-                                        type="button"
-                                        class="hero-cta replica-button"
-                                        data-replica-id="<?php echo (int)$replica['id']; ?>"
-                                        data-replica-label="<?php echo htmlspecialchars(formatDataReplica($replica['data_ora_inizio'])); ?>">
+                                    type="button"
+                                    class="hero-cta replica-button"
+                                    data-replica-id="<?php echo (int)$replica['id']; ?>"
+                                    data-replica-label="<?php echo htmlspecialchars(formatDataReplica($replica['data_ora_inizio'])); ?>"
+                                    >
                                     Seleziona
-                                </button>   
+                                </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -373,102 +374,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
     </div>
 
     <div class="matches-grid" id="sector-list">
-        <?php if (!empty($settori)): ?>
-            <?php foreach ($settori as $settore): ?>
-                <div class="match-card">
-                    <div class="match-card-top">
-                        <span class="match-badge"><?php echo htmlspecialchars($settore['nome_settore']); ?></span>
-                        <span class="match-date">€ <?php echo number_format((float)$settore['prezzo'], 2, ',', '.'); ?></span>
-                    </div>
-
-                    <div class="match-details" style="padding-top: 18px;">
-                        <h3><?php echo htmlspecialchars($settore['nome_settore']); ?></h3>
-                        <p>Posti disponibili: <?php echo (int)$settore['posti_disponibili']; ?> / <?php echo (int)$settore['posti_totali']; ?></p>
-                    </div>
-
-                    <div class="match-card-bottom">
-                        <button
-                            type="button"
-                            class="match-action sector-button"
-                            data-settore-id="<?php echo (int)$settore['id']; ?>"
-                            data-settore-nome="<?php echo htmlspecialchars($settore['nome_settore']); ?>"
-                            data-settore-prezzo="<?php echo (float)$settore['prezzo']; ?>"
-                            data-settore-disponibili="<?php echo (int)$settore['posti_disponibili']; ?>"
-                            data-settore-totali="<?php echo (int)$settore['posti_totali']; ?>"
-                        >
-                            Scegli questo settore
-                        </button>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div class="empty-state">
-                <h3>Nessun settore selezionato</h3>
-                <p>Scegli prima una replica per vedere i settori disponibili.</p>
-            </div>
-        <?php endif; ?>
+        <div class="empty-state">
+            <h3>Nessun settore selezionato</h3>
+            <p>Scegli prima una replica per vedere i settori disponibili.</p>
+        </div>
     </div>
 </section>
 
-        <?php if ($selectedSettore): ?>
-            <section class="section-block">
-                <div class="section-heading">
-                    <h2>Completa acquisto</h2>
-                    <p>
-                        Settore selezionato: <?php echo htmlspecialchars($selectedSettore['nome_settore']); ?>
-                        · Prezzo per biglietto: € <?php echo number_format((float)$selectedSettore['prezzo'], 2, ',', '.'); ?>
-                    </p>
-                </div>
+        <section class="section-block" id="purchase-section" style="display:none;">
+    <div class="section-heading">
+        <h2>Completa acquisto</h2>
+        <p>
+            Settore selezionato:
+            <span id="purchase-settore">-</span>
+            · Prezzo per biglietto: €
+            <span id="purchase-prezzo">-</span>
+        </p>
+    </div>
 
-                <?php if (!empty($errore)): ?>
-                    <div class="admin-card" style="border-color:#f1d1ca; color:#c13d2a; margin-bottom:20px;">
-                        <?php echo htmlspecialchars($errore); ?>
-                    </div>
-                <?php endif; ?>
+    <?php if (!empty($errore)): ?>
+        <div class="admin-card" style="border-color:#f1d1ca; color:#c13d2a; margin-bottom:20px;">
+            <?php echo htmlspecialchars($errore); ?>
+        </div>
+    <?php endif; ?>
 
-                <?php if ((int)$selectedSettore['posti_disponibili'] <= 0): ?>
-                    <div class="empty-state">
-                        <h3>Posti finiti</h3>
-                        <p>Non ci sono più posti disponibili per questo settore.</p>
-                    </div>
-                <?php else: ?>
-                    <form method="post" class="admin-card">
-                        <input type="hidden" name="azione" value="acquista">
-                        <input type="hidden" name="id_evento_settore" value="<?php echo (int)$selectedSettore['id']; ?>">
+    <form method="post" class="admin-card" id="purchase-form">
+        <input type="hidden" name="azione" value="acquista">
+        <input type="hidden" name="id_evento_settore" id="selected-evento-settore" value="0">
 
-                        <div class="admin-form-group">
-                            <label>Seleziona i posti</label>
-                            <div class="seat-grid">
-                                <?php for ($i = 1; $i <= (int)$selectedSettore['posti_totali']; $i++): ?>
-                                    <?php $occupato = in_array($i, $postiOccupati, true); ?>
-                                    <?php if ($occupato): ?>
-                                        <span class="seat-pill seat-occupied">P<?php echo $i; ?></span>
-                                    <?php else: ?>
-                                        <label class="seat-pill seat-available">
-                                            <input type="checkbox" name="posti[]" value="<?php echo $i; ?>">
-                                            <span>P<?php echo $i; ?></span>
-                                        </label>
-                                    <?php endif; ?>
-                                <?php endfor; ?>
-                            </div>
-                            <small class="seat-legend">Blu chiaro = disponibile · Arancione = selezionato · Grigio = occupato</small>
-                        </div>
+        <div class="admin-form-group">
+            <label>Seleziona i posti</label>
+            <div class="seat-grid" id="seat-grid"></div>
+            <small class="seat-legend">Blu chiaro = disponibile · Arancione = selezionato · Grigio = occupato</small>
+        </div>
 
-                        <div class="admin-form-group">
-                            <label>Prezzo per biglietto</label>
-                            <input type="text" value="€ <?php echo number_format((float)$selectedSettore['prezzo'], 2, ',', '.'); ?>" readonly>
-                        </div>
+        <div class="admin-form-group">
+            <label>Prezzo per biglietto</label>
+            <input type="text" id="purchase-prezzo-input" value="" readonly>
+        </div>
 
-                        <div class="admin-form-group">
-                            <label>Posti disponibili</label>
-                            <input type="text" value="<?php echo (int)$selectedSettore['posti_disponibili']; ?>" readonly>
-                        </div>
+        <div class="admin-form-group">
+            <label>Posti disponibili</label>
+            <input type="text" id="purchase-posti" value="" readonly>
+        </div>
 
-                        <button type="submit" class="admin-submit">Acquista biglietti</button>
-                    </form>
-                <?php endif; ?>
-            </section>
-        <?php endif; ?>
+        <button type="submit" class="admin-submit">Acquista biglietti</button>
+    </form>
+</section>
     </main>
 
     <footer class="site-footer">
