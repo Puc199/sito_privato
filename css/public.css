@@ -1,335 +1,324 @@
-/* =========================
-   HOME.PHP
-   HERO
-========================= */
+/* ===== EVENTO DETAIL PAGE ===== */
 
-.hero-section {
-    position: relative;
-    min-height: 360px;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 32px;
-    box-shadow: var(--shadow-md);
-    background-size: 120%;
-    background-position: center 72%;
-    background-repeat: no-repeat;
+.page-shell {
+    max-width: 1120px;
+    padding: 32px 24px 56px;
 }
 
-.hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(8, 34, 56, 0.04), rgba(8, 34, 56, 0.20));
-}
-
-.hero-content {
-    position: relative;
-    z-index: 1;
-    max-width: 760px;
-    color: #fff;
-}
-
-.hero-content h1 {
-    margin: 0 0 14px;
-    font-size: clamp(2rem, 4vw, 3.3rem);
-    line-height: 1.1;
-    text-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-}
-
-.hero-content p {
-    margin: 0 auto 26px;
-    font-size: 1.1rem;
-    max-width: 640px;
-    line-height: 1.6;
-}
-
-/* =========================
-   HOME.PHP
-   CATEGORIE
-========================= */
-
-.category-bar {
-    margin-top: 18px;
-    background: rgba(255, 255, 255, 0.94);
-    border: 1px solid var(--color-border);
-    border-radius: 18px;
-    padding: 16px 18px;
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    box-shadow: var(--shadow-sm);
-}
-
-.category-item,
-.category-search {
-    padding: 14px 16px;
-    border-radius: 14px;
-    text-align: center;
-    font-weight: 700;
-}
-
-.category-item {
-    background: #f8fbfe;
-    color: var(--color-text);
-    border: 1px solid #e4edf4;
-}
-
-.category-search {
-    background: linear-gradient(180deg, #f7a61b 0%, var(--color-accent) 100%);
-    color: #fff;
-}
-
-/* =========================
-   HOME.PHP
-   CARD EVENTI
-========================= */
-
-.matches-grid {
+.section-block {
     margin-top: 24px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 22px;
+    padding: 30px;
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #dfe9f2;
+    box-shadow: 0 10px 28px rgba(10, 52, 84, 0.08);
 }
 
-.match-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 22px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.section-heading h2 {
+    font-size: clamp(1.8rem, 2.8vw, 2.4rem);
+    line-height: 1.1;
+    margin-bottom: 6px;
 }
 
-.match-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-}
-
-.match-card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 16px 18px 0;
-}
-
-.match-badge {
-    background: var(--color-accent);
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.88rem;
-    padding: 8px 12px;
-    border-radius: 999px;
-}
-
-.match-date {
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-    font-weight: 600;
-}
-
-.match-logos {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    padding: 22px 20px 14px;
-    min-height: 150px;
-}
-
-.match-logos img {
-    width: 84px;
-    height: 84px;
-    object-fit: contain;
-    background: #fff;
-    border-radius: 50%;
-    padding: 8px;
-    border: 1px solid #ebf1f6;
-}
-
-.vs-text {
-    font-weight: 800;
-    color: var(--color-primary);
-    letter-spacing: 1px;
-}
-
-.match-details {
-    text-align: center;
-    padding: 0 20px 12px;
-}
-
-.match-details h3 {
-    margin: 0 0 8px;
-    font-size: 1.3rem;
-    color: #0c2840;
-}
-
-.match-details p {
-    margin: 0;
-    color: var(--color-text-muted);
+.section-heading p {
+    font-size: 1rem;
     line-height: 1.5;
 }
 
-.match-card-bottom {
-    padding: 18px 20px 22px;
-    display: flex;
-    justify-content: center;
+/* top layout evento */
+.admin-grid {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.8fr);
+    gap: 24px;
+    align-items: start;
 }
 
-/* =========================
-   EVENTO.PHP
-   REPLICHE / SETTORI
-========================= */
+.admin-preview-card,
+.admin-card {
+    background: #ffffff;
+    border: 1px solid #dde7f0;
+    border-radius: 24px;
+    box-shadow: 0 10px 24px rgba(10, 52, 84, 0.08);
+}
 
-.replica-grid,
-.sector-grid {
-    margin-top: 18px;
+.admin-preview-card {
+    overflow: hidden;
+    padding: 0;
+}
+
+.admin-preview-image {
+    height: 360px !important;
+    background: #edf4fa;
+    border-bottom: 1px solid #dde7f0;
+}
+
+.admin-preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-preview-body {
+    padding: 24px;
+}
+
+.admin-preview-top {
+    margin-bottom: 14px;
+}
+
+.admin-preview-badge {
+    background: linear-gradient(180deg, #f7a61b 0%, #f39a05 100%);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.admin-preview-date {
+    color: #6b7c8c;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.admin-preview-body h4 {
+    margin: 0 0 10px;
+    font-size: 1.7rem;
+    line-height: 1.2;
+    color: #0c2840;
+}
+
+.admin-preview-body p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #5e7387;
+}
+
+/* card utente */
+.admin-card {
+    padding: 24px;
+}
+
+.admin-card h3 {
+    margin: 0 0 18px;
+    font-size: 1.35rem;
+    color: #0c2840;
+}
+
+.admin-form-group {
+    margin-bottom: 18px;
+}
+
+.admin-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: #17324a;
+    font-size: 0.95rem;
+}
+
+.admin-card input[type="text"],
+.admin-card input[type="number"],
+.admin-card select,
+.admin-card textarea {
+    width: 100%;
+    min-height: 50px;
+    padding: 13px 15px;
+    border-radius: 14px;
+    border: 1px solid #d9e5ef;
+    background: #f8fbfe;
+    color: #13293d;
+    font-size: 0.98rem;
+    box-shadow: inset 0 1px 2px rgba(10, 52, 84, 0.03);
+}
+
+/* repliche */
+.admin-list {
+    margin-top: 24px;
     display: grid;
     gap: 16px;
 }
 
-.replica-button,
-.sector-card {
-    background: #fff;
-    border: 1px solid var(--color-border);
+.admin-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 20px;
     border-radius: 18px;
-    padding: 18px;
-    box-shadow: var(--shadow-sm);
-    transition: 0.2s ease;
+    border: 1px solid #dce7f0;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
+    box-shadow: 0 8px 20px rgba(10, 52, 84, 0.06);
+}
+
+.admin-list-item strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 1rem;
+    color: #0d2d46;
+}
+
+.admin-list-item span {
+    font-size: 0.95rem;
+    color: #667b8d;
+}
+
+.replica-button,
+.hero-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 150px;
+    min-height: 46px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f7a61b 0%, #f39a05 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 10px 20px rgba(243, 154, 5, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .replica-button:hover,
-.sector-card:hover {
+.hero-cta:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    background: linear-gradient(180deg, #f0a000 0%, #d98500 100%);
+    box-shadow: 0 14px 24px rgba(243, 154, 5, 0.28);
 }
 
-.replica-button.active,
-.sector-card.active {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(11, 95, 151, 0.10);
+/* settore */
+.matches-grid#sector-list {
+    margin-top: 22px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-.replica-riepilogo,
-.purchase-summary {
-    margin-top: 18px;
-    padding: 16px 18px;
-    border-radius: 16px;
-    background: #f8fbfe;
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
+.matches-grid#sector-list .match-card,
+.matches-grid#sector-list > div:not(.empty-state) {
+    background: #fff;
+    border: 1px solid #dce7f0;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 8px 20px rgba(10, 52, 84, 0.06);
 }
 
-/* =========================
-   EVENTO.PHP
-   SELEZIONE POSTI
-========================= */
+/* acquisto */
+#purchase-section {
+    display: none;
+}
+
+#purchase-form.admin-card {
+    max-width: 760px;
+}
 
 .seat-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
     gap: 12px;
-    margin-top: 12px;
 }
 
 .seat-pill {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 54px;
+    min-height: 56px;
     border-radius: 14px;
-    font-weight: 700;
-    border: 1px solid var(--color-border);
-    transition: all 0.2s ease;
-}
-
-.seat-pill input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+    font-size: 0.95rem;
 }
 
 .seat-available {
-    background: #eef4f8;
-    color: var(--color-primary);
-    cursor: pointer;
+    background: #eef6fc;
+    color: #0b5f97;
     border: 1px solid #cfe0ec;
 }
 
 .seat-available:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-    background: #eaf4fb;
+    background: #e3f1fb;
 }
 
 .seat-available input:checked + span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 54px;
-    border-radius: 14px;
-    background: var(--color-accent);
+    background: #f39a05;
     color: #fff;
 }
 
 .seat-occupied {
-    background: #fde9e6;
-    color: #9b3131;
+    background: #fbe3e0;
+    color: #b13a32;
     border: 1px solid #f1d1ca;
-    cursor: not-allowed;
 }
 
 .seat-legend {
-    display: block;
-    margin-top: 10px;
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    color: #667b8d;
 }
 
-/* =========================
-   EVENTO.PHP
-   FORM ACQUISTO
-========================= */
-
-.purchase-box {
-    margin-top: 24px;
+.admin-submit {
+    margin-top: 8px;
+    min-height: 52px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #f7a61b 0%, #f39a05 100%);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 10px 20px rgba(243, 154, 5, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.purchase-box .admin-card {
-    padding: 22px;
+.admin-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 24px rgba(243, 154, 5, 0.28);
 }
 
-/* =========================
-   RESPONSIVE PUBLIC
-========================= */
+/* stati vuoti */
+.empty-state {
+    padding: 46px 20px;
+    border-radius: 18px;
+    background: #f8fbfe;
+    border: 1px dashed #d3e1ec;
+}
 
-@media (max-width: 980px) {
-    .category-bar {
-        grid-template-columns: repeat(2, 1fr);
+.empty-state h3 {
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+}
+
+/* responsive */
+@media (max-width: 960px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-preview-image {
+        height: 280px !important;
+    }
+
+    .admin-list-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .replica-button,
+    .hero-cta {
+        width: 100%;
     }
 }
 
 @media (max-width: 640px) {
-    .hero-section {
-        min-height: 300px;
-        padding: 22px;
+    .page-shell {
+        padding: 18px 14px 40px;
     }
 
-    .hero-content h1 {
-        font-size: 2rem;
+    .section-block {
+        padding: 20px;
+        border-radius: 20px;
     }
 
-    .category-bar {
-        grid-template-columns: 1fr;
+    .admin-preview-body h4 {
+        font-size: 1.35rem;
     }
 
-    .matches-grid {
-        grid-template-columns: 1fr;
+    .admin-preview-image {
+        height: 220px !important;
     }
 }
