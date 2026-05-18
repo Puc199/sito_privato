@@ -1,0 +1,330 @@
+/* =========================
+   VARIABILI GLOBALI
+========================= */
+
+:root {
+    --color-primary: #0b5f97;
+    --color-primary-dark: #084c79;
+    --color-primary-hover: #084c79;
+    --color-accent: #f39a05;
+    --color-accent-dark: #d98500;
+    --color-bg: #edf3f8;
+    --color-surface: #ffffff;
+    --color-surface-soft: #f8fbfe;
+    --color-text: #13293d;
+    --color-text-muted: #607487;
+    --color-border: #e4edf4;
+    --shadow-sm: 0 6px 18px rgba(10, 52, 84, 0.08);
+    --shadow-md: 0 16px 40px rgba(10, 52, 84, 0.14);
+    --radius-sm: 10px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+}
+
+/* =========================
+   RESET E TAG BASE
+========================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #edf3f8 0%, #f8fbfe 100%);
+    color: var(--color-text);
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+input,
+select,
+textarea {
+    outline: none;
+}
+
+/* =========================
+   HEADER / FOOTER
+========================= */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.header-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.brand img {
+    height: 80px;
+    width: auto;
+}
+
+.user-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.site-footer {
+    text-align: center;
+    padding: 22px;
+    color: var(--color-text-muted);
+}
+
+/* =========================
+   LAYOUT COMUNE
+========================= */
+
+.page-shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.section-block {
+    margin-top: 26px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+}
+
+.section-heading h2 {
+    margin: 0;
+    font-size: 2rem;
+    color: #081f34;
+}
+
+.section-heading p {
+    margin: 8px 0 0;
+    color: var(--color-text-muted);
+}
+
+/* =========================
+   BOTTONI E LINK RIUTILIZZABILI
+========================= */
+
+.user-pill {
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+.primary-pill {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.primary-pill:hover {
+    background: var(--color-primary-dark);
+}
+
+.secondary-pill {
+    background: #eef3f8;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.secondary-pill:hover {
+    background: #e3ebf3;
+}
+
+.hero-cta {
+    display: inline-block;
+    text-decoration: none;
+    background: linear-gradient(180deg, #f7a61b 0%, var(--color-accent) 100%);
+    color: #fff;
+    font-weight: 700;
+    padding: 14px 26px;
+    border-radius: 14px;
+    box-shadow: 0 12px 24px rgba(243, 154, 5, 0.28);
+    transition: transform 0.2s ease, background 0.2s ease;
+    border: none;
+}
+
+.hero-cta:hover {
+    background: linear-gradient(180deg, #f0a000 0%, var(--color-accent-dark) 100%);
+    transform: translateY(-2px);
+}
+
+.match-action {
+    display: inline-block;
+    background: #fff3df;
+    color: var(--color-accent-dark);
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    border: none;
+}
+
+.match-action:hover {
+    transform: translateY(-2px);
+}
+
+.admin-submit,
+.admin-delete,
+.dash-btn {
+    transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.admin-submit:hover,
+.admin-delete:hover,
+.dash-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* =========================
+   CARD E COMPONENTI GENERICI
+========================= */
+
+.admin-card,
+.summary-card,
+.ticket-card,
+.empty-card,
+.hero-user-card,
+.match-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--color-text-muted);
+}
+
+.empty-state h3 {
+    margin: 0 0 10px;
+    color: var(--color-text);
+}
+
+.empty-state p {
+    margin: 0;
+}
+
+/* =========================
+   FORM BASE
+========================= */
+
+.admin-form-group {
+    margin-bottom: 16px;
+}
+
+.admin-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.admin-card input[type="text"],
+.admin-card input[type="datetime-local"],
+.admin-card input[type="file"],
+.admin-card input[type="number"],
+.admin-card input[type="date"],
+.admin-card input[type="time"],
+.admin-card input[type="password"],
+.admin-card select,
+.admin-card textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #dce7f0;
+    background: #fff;
+    color: var(--color-text);
+    font-size: 0.98rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-card input:focus,
+.admin-card select:focus,
+.admin-card textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(11, 95, 151, 0.10);
+}
+
+.admin-card textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* =========================
+   RESPONSIVE GLOBALE
+========================= */
+
+@media (max-width: 980px) {
+    .header-inner {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .user-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .section-block,
+    .admin-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .page-shell {
+        padding: 16px;
+    }
+
+    .brand img {
+        height: 54px;
+    }
+
+    .section-heading h2 {
+        font-size: 1.6rem;
+    }
+}

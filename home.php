@@ -28,7 +28,7 @@ $heroBackground = "img/concerto.jpg";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EasyTicket</title>
     <link rel="icon" type="image/x-icon" href="img/icn_sito_sf.png">
-    <link rel="stylesheet" href="css/style1.css?v=30">
+    <link rel="stylesheet" href="css/base.css?v=30">
 </head>
 <body>
     <header class="site-header">
