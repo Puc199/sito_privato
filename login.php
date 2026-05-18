@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - EasyTicket</title>
-    <link rel="stylesheet" href="css/style2.css?v=21">
+    <link rel="stylesheet" href="css/login.css?v=21">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body>

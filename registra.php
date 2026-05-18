@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Registrati - EasyTicket</title>
-    <link rel="stylesheet" href="css/style1.css">
+    <link rel="stylesheet" href="css/login.css">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body>
