@@ -19,17 +19,20 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $id_evento = (int)($_POST['id_evento'] ?? 0);
 $id_evento_settore = (int)($_POST['id_evento_settore'] ?? 0);
 $prezzo_post = (float)($_POST['prezzo'] ?? 0);
-$posti_raw = trim($_POST['posti'] ?? '');
 
-if ($id_evento <= 0 || $id_evento_settore <= 0 || $posti_raw === '') {
-    header("Location: home.php");
-    exit();
+$posti_input = $_POST['posti'] ?? '';
+
+if (is_array($posti_input)) {
+    $posti = array_filter(array_map('intval', $posti_input), fn($p) => $p > 0);
+    $posti = array_values(array_unique($posti));
+    $posti_raw = implode(',', $posti);
+} else {
+    $posti_raw = trim((string)$posti_input);
+    $posti = array_filter(array_map('intval', explode(',', $posti_raw)), fn($p) => $p > 0);
+    $posti = array_values(array_unique($posti));
 }
 
-$posti = array_filter(array_map('intval', explode(',', $posti_raw)), fn($p) => $p > 0);
-$posti = array_values(array_unique($posti));
-
-if (empty($posti)) {
+if ($id_evento <= 0 || $id_evento_settore <= 0 || empty($posti)) {
     header("Location: home.php");
     exit();
 }
