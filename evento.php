@@ -474,5 +474,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
     <footer class="site-footer">
         <p>&copy; 2026 EasyTicket</p>
     </footer>
+    <script src="js/evento.js"></script>
 </body>
 </html>
