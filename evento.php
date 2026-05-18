@@ -127,115 +127,6 @@ if ($selectedSettore) {
 }
 
 $errore = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acquista') {
-    if ($ruolo !== 2) {
-        $errore = 'Solo gli utenti cliente possono acquistare biglietti.';
-    } else {
-        $id_evento_settore = (int)($_POST['id_evento_settore'] ?? 0);
-        $postiSelezionati = $_POST['posti'] ?? [];
-
-        if (!is_array($postiSelezionati)) {
-            $postiSelezionati = [];
-        }
-
-        $postiSelezionati = array_values(array_unique(array_map('intval', $postiSelezionati)));
-        $postiSelezionati = array_values(array_filter($postiSelezionati, fn($p) => $p > 0));
-
-        if ($id_evento_settore <= 0 || empty($postiSelezionati)) {
-            $errore = 'Seleziona almeno un posto valido.';
-        } else {
-            try {
-                $pdo->beginTransaction();
-
-                $sqlSettore = "SELECT es.id, es.prezzo, es.posti_disponibili, es.posti_totali, s.nome AS nome_settore
-                               FROM evento_settore es
-                               JOIN settore s ON es.id_settore = s.id
-                               WHERE es.id = ?
-                               LIMIT 1 FOR UPDATE";
-                $stmt = $pdo->prepare($sqlSettore);
-                $stmt->execute([$id_evento_settore]);
-                $settoreAcquisto = $stmt->fetch();
-
-                if (!$settoreAcquisto) {
-                    throw new Exception('Settore non trovato.');
-                }
-
-                $quantita = count($postiSelezionati);
-
-                if ((int)$settoreAcquisto['posti_disponibili'] < $quantita) {
-                    throw new Exception('Non ci sono abbastanza posti disponibili per questa selezione.');
-                }
-
-                $stmt = $pdo->prepare('SELECT posto FROM biglietto WHERE id_evento_settore = ?');
-                $stmt->execute([$id_evento_settore]);
-                $occupati = [];
-                foreach ($stmt->fetchAll() as $row) {
-                    $occupati[] = (int)$row['posto'];
-                }
-
-                foreach ($postiSelezionati as $posto) {
-                    if ($posto > (int)$settoreAcquisto['posti_totali']) {
-                        throw new Exception('Uno dei posti selezionati non è valido.');
-                    }
-                    if (in_array($posto, $occupati, true)) {
-                        throw new Exception('Uno dei posti selezionati è già stato prenotato.');
-                    }
-                }
-
-                $prezzoUnitario = (float)$settoreAcquisto['prezzo'];
-                $prezzoTotale = $prezzoUnitario * $quantita;
-
-                $stmt = $pdo->prepare('SELECT saldo FROM utente WHERE id = ? FOR UPDATE');
-                $stmt->execute([$user['id']]);
-                $saldoCorrente = (float)(($stmt->fetch()['saldo']) ?? 0);
-
-                if ($saldoCorrente < $prezzoTotale) {
-                    $pdo->rollBack();
-                    header('Location: User_dashboard.php');
-                    exit();
-                }
-
-                $stmt = $pdo->prepare('UPDATE utente SET saldo = saldo - ? WHERE id = ?');
-                $stmt->execute([$prezzoTotale, $user['id']]);
-
-                $stmt = $pdo->prepare('UPDATE evento_settore SET posti_disponibili = posti_disponibili - ? WHERE id = ?');
-                $stmt->execute([$quantita, $id_evento_settore]);
-
-                $disponibilita = 1;
-                $ticketCreati = [];
-                $stmt = $pdo->prepare('INSERT INTO biglietto (sigillo_fiscale, disponibilita, id_utente, id_evento_settore, posto, prezzo) VALUES (?, ?, ?, ?, ?, ?)');
-
-                foreach ($postiSelezionati as $posto) {
-                    $sigilloFiscale = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 15);
-                    $stmt->execute([$sigilloFiscale, $disponibilita, $user['id'], $id_evento_settore, $posto, $prezzoUnitario]);
-                    $ticketCreati[] = [
-                        'sigillo_fiscale' => $sigilloFiscale,
-                        'posto' => $posto,
-                        'prezzo' => $prezzoUnitario,
-                    ];
-                }
-
-                $_SESSION['ticket_info'] = [
-                    'settore' => $settoreAcquisto['nome_settore'],
-                    'evento' => $evento['titolo'],
-                    'quantita' => $quantita,
-                    'totale' => $prezzoTotale,
-                    'biglietti' => $ticketCreati,
-                ];
-
-                $pdo->commit();
-                header('Location: confirmation.php');
-                exit();
-            } catch (Throwable $e) {
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
-                $errore = $e->getMessage();
-            }
-        }
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -400,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
 
     <form action="checkout.php" method="post" class="admin-card" id="purchase-form">
     <input type="hidden" name="azione" value="acquista">
-    <input type="hidden" name="id_evento" value="<?php echo (int)$evento['id']; ?>">
+    <input type="hidden" name="id_evento" value="<?php echo (int)$id_evento; ?>">
     <input type="hidden" name="id_evento_settore" id="selected-evento-settore" value="0">
     <input type="hidden" name="prezzo" id="purchase-prezzo-hidden" value="">
     <input type="hidden" name="posti" id="purchase-posti-hidden" value="">
