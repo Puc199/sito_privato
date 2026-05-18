@@ -1,121 +1,109 @@
 <?php
-require_once 'init.php';
+session_start();
+require_once 'db.php';
 
 $reg_error = '';
 $reg_success = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome         = trim($_POST['nome'] ?? '');
-    $cognome      = trim($_POST['cognome'] ?? '');
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $nome = trim($_POST['nome'] ?? '');
+    $cognome = trim($_POST['cognome'] ?? '');
     $data_nascita = trim($_POST['data_nascita'] ?? '');
-    $username     = trim($_POST['username'] ?? '');
-    $password     = $_POST['password'] ?? '';
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
 
     if ($nome === '' || $cognome === '' || $data_nascita === '' || $username === '' || $password === '') {
         $reg_error = "Compila tutti i campi.";
     } else {
-        try {
-            $stmt = $pdo->prepare("SELECT id FROM utente WHERE username = ? LIMIT 1");
-            $stmt->execute([$username]);
-            $exists = $stmt->fetch();
+        $stmt = $conn->prepare("SELECT id FROM utente WHERE username = ? LIMIT 1");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $stmt->store_result();
+        $exists = $stmt->num_rows > 0;
+        $stmt->close();
 
-            if ($exists) {
-                $reg_error = "Username già in uso. Scegline un altro.";
-            } else {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                $id_ruolo = 2;
-                $saldo = 0.00;
+        if ($exists) {
+            $reg_error = "Username già in uso. Scegline un altro.";
+        } else {
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $id_ruolo = 2;
+            $saldo = 0.00;
 
-                $stmt = $pdo->prepare("
-                    INSERT INTO utente
-                    (nome, cognome, data_nascita, username, password, id_ruolo, saldo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([
-                    $nome,
-                    $cognome,
-                    $data_nascita,
-                    $username,
-                    $hash,
-                    $id_ruolo,
-                    $saldo
-                ]);
+            $stmt = $conn->prepare("
+                INSERT INTO utente (nome, cognome, data_nascita, username, password, id_ruolo, saldo)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->bind_param("sssssid", $nome, $cognome, $data_nascita, $username, $hash, $id_ruolo, $saldo);
 
+            if ($stmt->execute()) {
                 $reg_success = "Registrazione completata! Reindirizzamento...";
                 header("Refresh: 2; URL=login.php");
+            } else {
+                $reg_error = "Errore durante la registrazione: " . $stmt->error;
             }
-        } catch (PDOException $e) {
-            $reg_error = "Errore durante la registrazione.";
+
+            $stmt->close();
         }
     }
+
+    $conn->close();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrati - EasyTicket</title>
+    <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/login.css">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
+
 </head>
-<body>
-<header class="site-header">
-    <div class="header-inner">
-        <a href="home.php" class="brand"><img src="img/logo_sito.png" alt="EasyTicket"></a>
-    </div>
-</header>
+<body class="auth-page">
 
-<main class="page-shell">
-    <section class="section-block" style="max-width:480px;margin:auto;">
-        <div class="section-heading">
-            <h2>Crea account</h2>
+    <main class="login-shell">
+        <div class="login-card register-card">
+            <div class="login-brand">
+                <img src="img/logo_sito.png" alt="Logo EasyTicket">
+                <h1>Crea account</h1>
+            </div>
+
+            <?php if (!empty($reg_error)): ?>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($reg_error); ?></div>
+            <?php endif; ?>
+
+            <?php if (!empty($reg_success)): ?>
+                <div class="alert alert-success"><?php echo htmlspecialchars($reg_success); ?></div>
+            <?php endif; ?>
+
+            <form method="POST" class="login-form">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" required value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>">
+
+                <label for="cognome">Cognome</label>
+                <input type="text" id="cognome" name="cognome" required value="<?php echo htmlspecialchars($_POST['cognome'] ?? ''); ?>">
+
+                <label for="data_nascita">Data di nascita</label>
+                <input type="date" id="data_nascita" name="data_nascita" required value="<?php echo htmlspecialchars($_POST['data_nascita'] ?? ''); ?>">
+
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
+
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+
+                <div class="wrap">
+                    <button type="submit" class="auth-submit">Registrati</button>
+                </div>
+            </form>
+
+            <div class="login-links">
+                <a href="login.php">Hai già un account? Accedi</a>
+            </div>
         </div>
+    </main>
 
-        <?php if ($reg_error): ?>
-            <div class="admin-card msg-ko"><?php echo esc($reg_error); ?></div>
-        <?php endif; ?>
-
-        <?php if ($reg_success): ?>
-            <div class="admin-card msg-ok"><?php echo esc($reg_success); ?></div>
-        <?php endif; ?>
-
-        <form method="post" class="admin-card">
-            <div class="admin-form-group">
-                <label>Nome</label>
-                <input type="text" name="nome" required>
-            </div>
-
-            <div class="admin-form-group">
-                <label>Cognome</label>
-                <input type="text" name="cognome" required>
-            </div>
-
-            <div class="admin-form-group">
-                <label>Data di nascita</label>
-                <input type="date" name="data_nascita" required>
-            </div>
-
-            <div class="admin-form-group">
-                <label>Username</label>
-                <input type="text" name="username" required>
-            </div>
-
-            <div class="admin-form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
-            </div>
-
-            <button type="submit" class="admin-submit">Registrati</button>
-        </form>
-
-        <p style="margin-top:12px;text-align:center;">
-            Hai già un account? <a href="login.php">Accedi</a>
-        </p>
-    </section>
-</main>
-
-<footer class="site-footer">
-    <p>&copy; 2026 EasyTicket</p>
-</footer>
 </body>
 </html>
