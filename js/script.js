@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+/*  document.addEventListener('DOMContentLoaded', () => {
     const swiper = new Swiper('.swiper-container', {
         loop: true,
         spaceBetween: 30,
