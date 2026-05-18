@@ -398,28 +398,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
         </div>
     <?php endif; ?>
 
-    <form method="post" class="admin-card" id="purchase-form">
-        <input type="hidden" name="azione" value="acquista">
-        <input type="hidden" name="id_evento_settore" id="selected-evento-settore" value="0">
+    <form action="checkout.php" method="post" class="admin-card" id="purchase-form">
+    <input type="hidden" name="azione" value="acquista">
+    <input type="hidden" name="id_evento" value="<?php echo (int)$evento['id']; ?>">
+    <input type="hidden" name="id_evento_settore" id="selected-evento-settore" value="0">
+    <input type="hidden" name="prezzo" id="purchase-prezzo-hidden" value="">
+    <input type="hidden" name="posti" id="purchase-posti-hidden" value="">
 
-        <div class="admin-form-group">
-            <label>Seleziona i posti</label>
-            <div class="seat-grid" id="seat-grid"></div>
-            <small class="seat-legend">Grigio chiaro = disponibile · Arancione = selezionato · Rosso = occupato</small>
-        </div>
+    <div class="admin-form-group">
+        <label>Seleziona i posti</label>
+        <div class="seat-grid" id="seat-grid"></div>
+        <small class="seat-legend">Grigio chiaro = disponibile · Arancione = selezionato · Rosso = occupato</small>
+    </div>
 
-        <div class="admin-form-group">
-            <label>Prezzo per biglietto</label>
-            <input type="text" id="purchase-prezzo-input" value="" readonly>
-        </div>
+    <div class="admin-form-group">
+        <label>Prezzo per biglietto</label>
+        <input type="text" id="purchase-prezzo-input" value="" readonly>
+    </div>
 
-        <div class="admin-form-group">
-            <label>Posti disponibili</label>
-            <input type="text" id="purchase-posti" value="" readonly>
-        </div>
+    <div class="admin-form-group">
+        <label>Posti selezionati</label>
+        <input type="text" id="purchase-posti-display" value="" readonly>
+    </div>
 
-        <a href = checkout.php \a> <button type="submit" class="admin-submit">Acquista biglietti</button>
-    </form>
+    <button type="submit" class="admin-submit">Acquista biglietti</button>
+</form>
 </section>
     </main>
 
