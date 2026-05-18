@@ -347,9 +347,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
                             </div>
 
                             <div>
-                                <a class="hero-cta" href="evento.php?id=<?php echo $id_evento; ?>&replica=<?php echo (int)$replica['id']; ?>">
+                                <button
+                                        type="button"
+                                        class="hero-cta replica-button"
+                                        data-replica-id="<?php echo (int)$replica['id']; ?>"
+                                        data-replica-label="<?php echo htmlspecialchars(formatDataReplica($replica['data_ora_inizio'])); ?>">
                                     Seleziona
-                                </a>
+                                </button>   
                             </div>
                         </div>
                     <?php endforeach; ?>
