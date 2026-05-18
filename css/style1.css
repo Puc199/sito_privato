@@ -584,7 +584,7 @@ body {
 }
 
 .seat-available {
-  background: #f4f9fd;
+  background: #9da0a2;
   color: var(--color-primary);
   cursor: pointer;
   border: 1px solid #cfe0ec;
@@ -609,7 +609,7 @@ body {
 
 .seat-occupied {
   background: #eef2f5;
-  color: #97a7b5;
+  color: #9b3131;
   border: 1px solid #d8e1e8;
   cursor: not-allowed;
 }

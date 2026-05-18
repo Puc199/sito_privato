@@ -405,7 +405,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
         <div class="admin-form-group">
             <label>Seleziona i posti</label>
             <div class="seat-grid" id="seat-grid"></div>
-            <small class="seat-legend">Blu chiaro = disponibile · Arancione = selezionato · Grigio = occupato</small>
+            <small class="seat-legend">Grigio chiaro = disponibile · Arancione = selezionato · Rosso = occupato</small>
         </div>
 
         <div class="admin-form-group">
