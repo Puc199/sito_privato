@@ -82,7 +82,10 @@ $heroBackground = "img/concerto.jpg";
                         <article class="match-card" onclick="handleEventClick(<?php echo (int)$event['id']; ?>)">
                             <div class="match-card-top">
                                 <span class="match-badge"><?php echo htmlspecialchars($event['categoria']); ?></span>
-                                <span class="match-date"><?php echo htmlspecialchars($event['data_evento']); ?></span>
+                                <span class="match-date"><?php 
+                                    $data = new DateTime($event['data_evento']);
+                                    echo $data->format('d/m/Y H:i');
+                                ?></span>
                             </div>
 
                             <div class="match-logos">
