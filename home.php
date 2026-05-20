@@ -1,7 +1,5 @@
 <?php
 require_once 'init.php';
-
-// Query corretta con PDO - la data si prende da replica_evento
 $sql = "SELECT e.id, e.titolo, MIN(r.data_ora_inizio) AS data_evento, e.immagine, c.nome AS categoria, l.nome AS luogo
         FROM evento e
         JOIN categoria c ON e.id_categoria = c.id
