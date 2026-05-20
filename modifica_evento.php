@@ -185,7 +185,8 @@ $primaData = $stmt->fetchColumn();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modifica Evento - EasyTicket</title>
     <link rel="icon" type="image/x-icon" href="img/icn_sito_sf.png">
-    <link rel="stylesheet" href="css/style1.css?v=70">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
 <header class="site-header">
