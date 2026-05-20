@@ -65,3 +65,5 @@ function getUserDetailsFromDatabase($username) {
     </main>
 </body>
 </html>
+
+
