@@ -1,5 +1,7 @@
 <?php
 require_once 'init.php';
+
+// Query corretta con PDO - la data si prende da replica_evento
 $sql = "SELECT e.id, e.titolo, MIN(r.data_ora_inizio) AS data_evento, e.immagine, c.nome AS categoria, l.nome AS luogo
         FROM evento e
         JOIN categoria c ON e.id_categoria = c.id
@@ -26,8 +28,7 @@ $heroBackground = "img/concerto.jpg";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EasyTicket</title>
     <link rel="icon" type="image/x-icon" href="img/icn_sito_sf.png">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/public.css">
+    <link rel="stylesheet" href="css/style1.css?v=30">
 </head>
 <body>
     <header class="site-header">
@@ -60,12 +61,12 @@ $heroBackground = "img/concerto.jpg";
         </section>
 
         <section class="category-bar">
-        <button class="category-item" data-category="all">Tutti gli Eventi</button>
-        <button class="category-item" data-category="concerto">Concerti</button>
-        <div class="category-item">Teatro</div>
-        <div class="category-item">Sport</div>
-        <button class="category-item" data-category="festival">Festival</button>
-        <button class="category-search">Cerca</button>
+            <button class="category-item" data-category="all">Tutti gli Eventi</button>
+            <button class="category-item" data-category="concerto">Concerti</button>
+            <div class="category-item">Teatro</div>
+            <div class="category-item">Sport</div>
+            <button class="category-item" data-category="festival">Festival</button>
+            <button class="category-search">Cerca</button>
         </section>
 
         <section class="section-block" id="eventi">
@@ -77,13 +78,12 @@ $heroBackground = "img/concerto.jpg";
             <?php if (!empty($events)): ?>
                 <div class="matches-grid">
                     <?php foreach ($events as $event): ?>
-                        <article class="match-card" onclick="handleEventClick(<?php echo (int)$event['id']; ?>)">
+                        <article class="match-card" 
+                            data-category="<?php echo strtolower(htmlspecialchars($event['categoria'])); ?>" 
+                            onclick="handleEventClick(<?php echo (int)$event['id']; ?>)">
                             <div class="match-card-top">
                                 <span class="match-badge"><?php echo htmlspecialchars($event['categoria']); ?></span>
-                                <span class="match-date"><?php 
-                                    $data = new DateTime($event['data_evento']);
-                                    echo $data->format('d/m/Y H:i');
-                                ?></span>
+                                <span class="match-date"><?php echo htmlspecialchars($event['data_evento']); ?></span>
                             </div>
 
                             <div class="match-logos">
@@ -133,5 +133,7 @@ $heroBackground = "img/concerto.jpg";
     <?php endif; ?>
 }
     </script>
+
+    <script src="js/script.js"></script>
 </body>
 </html>
