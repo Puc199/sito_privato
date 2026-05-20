@@ -76,10 +76,4 @@ function getUserDetailsFromDatabase($pdo, $username) {
         <a href="home.php">Torna alla Home</a>
     </main>
 </body>
-<<<<<<< HEAD
 </html>
-
-
-=======
-</html>
->>>>>>> 4c087f73274427b82da25fdb6e34d68ade4a4cd3

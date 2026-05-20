@@ -347,7 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
                             </div>
 
                             <div>
-                                <<button
+                                <button
                                         type="button"
                                         class="hero-cta replica-button"
                                         onclick="window.location.href='evento.php?id=<?php echo $id_evento; ?>&replica=<?php echo (int)$replica['id']; ?>#sector-list'">
