@@ -62,12 +62,12 @@ $heroBackground = "img/concerto.jpg";
         </section>
 
         <section class="category-bar">
-            <div class="category-item">Tutti gli Eventi</div>
-            <div class="category-item">Concerti</div>
-            <div class="category-item">Teatro</div>
-            <div class="category-item">Sport</div>
-            <div class="category-item">Festival</div>
-            <div class="category-search">Cerca</div>
+        <button class="category-item" data-category="all">Tutti gli Eventi</button>
+        <button class="category-item" data-category="concerto">Concerti</button>
+        <div class="category-item">Teatro</div>
+        <div class="category-item">Sport</div>
+        <button class="category-item" data-category="festival">Festival</button>
+        <button class="category-search">Cerca</button>
         </section>
 
         <section class="section-block" id="eventi">
