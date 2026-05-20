@@ -15,7 +15,7 @@ $username = isset($_SESSION['username']) ? esc($_SESSION['username']) : null;
 $isLogged = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
 $heroTitle = "Benvenuto su EasyTicket";
 $heroSubtitle = $isLogged
-? "Scopri i prossimi eventi e prenota in pochi click."
+? "Scopri i prossimi eventi, gestisci i tuoi biglietti e prenota in pochi click."
 : "Prenota i tuoi eventi in modo semplice, veloce e sicuro.";
 $heroBackground = "img/image.png";
 ?>
@@ -48,12 +48,10 @@ $heroBackground = "img/image.png";
 </div>
 </header>
 <main class="page-shell">
-    <section class="hero-section" style="background: url('<?php echo htmlspecialchars($heroBackground, ENT_QUOTES, 'UTF-8'); ?>') center/cover no-repeat;">
-<div class="hero-overlay"></div>
+<section class="hero-section" style="background: url('<?php echo htmlspecialchars($heroBackground, ENT_QUOTES, 'UTF-8'); ?>') center/cover no-repeat;"><div class="hero-overlay"></div>
 <div class="hero-content">
 <h1><?php echo $heroTitle; ?></h1>
 <p><?php echo $heroSubtitle; ?></p>
-<a href="#eventi" class="hero-cta">Vedi Spettacoli</a>
 </div>
 </section>
 <section class="category-bar">
