@@ -1,111 +1,60 @@
 <?php
 require_once 'init.php';
 
-$reset_error = '';
-$reset_success = '';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = trim($_POST['username'] ?? '');
-    $new_password = $_POST['new_password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
+$messaggio = "";
 
-    if ($username === '' || $new_password === '' || $confirm_password === '') {
-        $reset_error = "Compila tutti i campi.";
-    } elseif ($new_password !== $confirm_password) {
-        $reset_error = "Le password non coincidono.";
-    } elseif (strlen($new_password) < 6) {
-        $reset_error = "La nuova password deve contenere almeno 6 caratteri.";
+// Eseguiamo la logica SOLO se l'utente ha effettivamente premuto il tasto nel form
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $user = trim($_POST['username'] ?? '');
+    $new_password = $_POST['password'] ?? '';
+    $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+
+    // Usiamo PDO (coerente con le slide del prof)
+    $stmt = $pdo->prepare("SELECT id FROM utente WHERE username = ? LIMIT 1");
+    $stmt->execute([$user]);
+    $idutente = $stmt->fetchColumn();
+
+    if ($idutente) {
+        // Username trovato, aggiorna la password
+        $update_stmt = $pdo->prepare("UPDATE utente SET password = ? WHERE id = ?");
+        $update_stmt->execute([$hashed_password, $idutente]);
+
+        // Reindirizza al login con un parametro di successo
+        header("Location: login.php");
+        exit();
     } else {
-        $stmt = $pdo->prepare("SELECT id FROM utente WHERE username = ? LIMIT 1");
-        $stmt->execute([$username]);
-        $user = $stmt->fetch();
-
-        if (!$user) {
-            $reset_error = "Username non trovato.";
-        } else {
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-
-            $update = $pdo->prepare("UPDATE utente SET password = ? WHERE id = ?");
-            $ok = $update->execute([$hashed_password, (int)$user['id']]);
-
-            if ($ok) {
-                $reset_success = "Password aggiornata con successo. Tra poco verrai reindirizzato al login.";
-                header("Refresh: 2; URL=login.php");
-            } else {
-                $reset_error = "Errore durante l'aggiornamento della password.";
-            }
-        }
+        $messaggio = "<p style='color: red;'>Username non trovato.</p>";
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recupera password - EasyTicket</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/login.css">
-    <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
+    <title>EasyTicket - Recupera Password</title>
+    <link rel="stylesheet" href="css/style2.css">
 </head>
-<body class="auth-page">
-
-    <main class="login-shell">
-        <div class="login-card">
-            <div class="login-brand">
-                <img src="img/logo_sito.png" alt="Logo EasyTicket">
-                <h1>Recupera password</h1>
+<body>
+    <div class="main">
+        <h1>Recupera Password</h1>
+        
+        <?php echo $messaggio; ?>
+        
+        <form action="recuperaPassword.php" method="post">
+            <label for="first">Username:</label>
+            <input type="text" id="first" name="username" placeholder="Inserisci Nome Utente" required>
+            
+            <label for="password">Nuova Password:</label>
+            <input type="password" id="password" name="password" placeholder="Inserisci nuova Password" required>
+            
+            <div class="wrap">
+                <button type="submit">Cambia Password</button>
             </div>
-
-            <?php if (!empty($reset_error)): ?>
-                <div class="alert alert-danger"><?php echo htmlspecialchars($reset_error); ?></div>
-            <?php endif; ?>
-
-            <?php if (!empty($reset_success)): ?>
-                <div class="alert alert-success"><?php echo htmlspecialchars($reset_success); ?></div>
-            <?php endif; ?>
-
-            <form action="recuperaPassword.php" method="post" class="login-form">
-                <label for="username">Username</label>
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    placeholder="Inserisci username"
-                    required
-                    value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
-                >
-
-                <label for="new_password">Nuova password</label>
-                <input
-                    type="password"
-                    id="new_password"
-                    name="new_password"
-                    placeholder="Inserisci nuova password"
-                    required
-                >
-
-                <label for="confirm_password">Conferma password</label>
-                <input
-                    type="password"
-                    id="confirm_password"
-                    name="confirm_password"
-                    placeholder="Conferma nuova password"
-                    required
-                >
-
-                <div class="wrap">
-                    <button type="submit" class="auth-submit">Aggiorna password</button>
-                </div>
-            </form>
-
-            <div class="login-links">
-                <a href="login.php">Torna al login</a>
-            </div>
-        </div>
-    </main>
-
+        </form>
+    </div>
 </body>
 
 </html>

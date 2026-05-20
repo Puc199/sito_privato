@@ -36,7 +36,7 @@ CREATE TABLE `biglietto` (
   `posto` int NOT NULL,
   `prezzo` decimal(10,2) NOT NULL,
   `data_acquisto` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `biglietto`
@@ -66,7 +66,7 @@ CREATE TABLE `categoria` (
   `id` int NOT NULL,
   `nome` varchar(50) NOT NULL,
   `descrizione` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `categoria`
@@ -93,7 +93,7 @@ CREATE TABLE `evento` (
   `id_luogo` int NOT NULL,
   `immagine` varchar(255) DEFAULT NULL,
   `stato` enum('programmato','annullato','completato') NOT NULL DEFAULT 'programmato'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `evento`
@@ -116,7 +116,7 @@ CREATE TABLE `evento_settore` (
   `prezzo` decimal(10,2) NOT NULL,
   `posti_totali` int NOT NULL,
   `posti_disponibili` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `evento_settore`
@@ -140,7 +140,7 @@ CREATE TABLE `luogo` (
   `citta` varchar(100) NOT NULL,
   `indirizzo` varchar(150) DEFAULT NULL,
   `capienza` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `luogo`
@@ -165,7 +165,7 @@ CREATE TABLE `replica_evento` (
   `data_ora_inizio` datetime NOT NULL,
   `data_ora_fine` datetime DEFAULT NULL,
   `stato` enum('programmata','annullata','completata') NOT NULL DEFAULT 'programmata'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `replica_evento`
@@ -185,7 +185,7 @@ INSERT INTO `replica_evento` (`id`, `id_evento`, `data_ora_inizio`, `data_ora_fi
 CREATE TABLE `ruolo` (
   `id` int NOT NULL,
   `nome` varchar(30) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `ruolo`
@@ -205,7 +205,7 @@ CREATE TABLE `settore` (
   `id` int NOT NULL,
   `nome` varchar(50) NOT NULL,
   `descrizione` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `settore`
@@ -233,7 +233,7 @@ CREATE TABLE `utente` (
   `password` varchar(255) NOT NULL,
   `id_ruolo` int NOT NULL,
   `saldo` decimal(10,2) NOT NULL DEFAULT '0.00'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `utente`
