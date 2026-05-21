@@ -4,26 +4,58 @@ require_once 'init.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Controllo se l'utente è loggato
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: login.php");
     exit();
 }
 
-// Recuperiamo l'username direttamente dalla sessione
 $username = $_SESSION['username'] ?? '';
 
-// ALLINEAMENTO: Leggiamo dal nuovo cassetto della sessione generato da evento.php
+if ($username === '') {
+    header("Location: login.php");
+    exit();
+}
+
 $ticketDetails = $_SESSION['ticket_info'] ?? [];
 
-// Usiamo il $pdo globale già pronto dentro init.php
-$userDetails = getUserDetailsFromDatabase($pdo, $username);
+if (empty($ticketDetails) || !is_array($ticketDetails)) {
+    header("Location: home.php");
+    exit();
+}
 
 function getUserDetailsFromDatabase($pdo, $username) {
-    $stmt = $pdo->prepare("SELECT * FROM utente WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT nome, cognome, data_nascita, username FROM utente WHERE username = ?");
     $stmt->execute([$username]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
+
+$userDetails = getUserDetailsFromDatabase($pdo, $username);
+
+$settore = $ticketDetails['settore'] ?? 'N/D';
+$totale = $ticketDetails['totale'] ?? '0.00';
+$nomeEvento = $ticketDetails['nome_evento'] ?? 'Acquisto confermato';
+$dataReplica = $ticketDetails['data_replica'] ?? null;
+$oraReplica = $ticketDetails['ora_replica'] ?? null;
+
+$posti = [];
+$sigilli = [];
+
+if (!empty($ticketDetails['biglietti']) && is_array($ticketDetails['biglietti'])) {
+    foreach ($ticketDetails['biglietti'] as $b) {
+        if (isset($b['posto'])) {
+            $posti[] = 'P' . $b['posto'];
+        }
+        if (!empty($b['sigillo_fiscale'])) {
+            $sigilli[] = $b['sigillo_fiscale'];
+        }
+    }
+}
+
+$postoStr = !empty($posti) ? implode(', ', $posti) : 'N/D';
+$sigilloStr = !empty($sigilli) ? implode(', ', $sigilli) : 'N/D';
+$numeroBiglietti = count($posti);
+
+unset($_SESSION['ticket_info']);
 ?>
 
 <!DOCTYPE html>
@@ -31,49 +63,101 @@ function getUserDetailsFromDatabase($pdo, $username) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conferma Acquisto</title>
-    <link rel="stylesheet" href="css/style3.css">
+    <title>Conferma Acquisto - EasyTicket</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/user.css">
+    <link rel="stylesheet" href="css/confirmation.css">
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body>
-    <header>
-        <h1>Grazie per il tuo acquisto, <?php echo htmlspecialchars($username); ?>!</h1>
-    </header>
-    <main>
-        <div>
-            <h2>Dati Utente</h2>
-            <p>Nome: <?php echo htmlspecialchars($userDetails['nome'] ?? ''); ?></p>
-            <p>Cognome: <?php echo htmlspecialchars($userDetails['cognome'] ?? ''); ?></p>
-            <p>Data di nascita: <?php echo htmlspecialchars($userDetails['data_nascita'] ?? ''); ?></p>
-            <p>Username: <?php echo htmlspecialchars($userDetails['username'] ?? ''); ?></p>
-        </div>
-        <div>
-            <h2>Dettagli Biglietto</h2>
-            <p>Settore: <?php echo htmlspecialchars($ticketDetails['settore'] ?? 'N/D'); ?></p>
-            
-            <?php 
-            // Estraiamo dinamicamente tutti i posti e i sigilli fiscali generati nella transazione
-            if (!empty($ticketDetails['biglietti']) && is_array($ticketDetails['biglietti'])) {
-                $posti = [];
-                $sigilli = [];
-                foreach ($ticketDetails['biglietti'] as $b) {
-                    $posti[] = "P" . $b['posto'];
-                    $sigilli[] = $b['sigillo_fiscale'];
-                }
-                // Se compri più posti li mostra separati da una virgola (es: P1, P2)
-                $postoStr = implode(', ', $posti);
-                $sigilloStr = implode(', ', $sigilli);
-            } else {
-                $postoStr = 'N/D';
-                $sigilloStr = 'N/D';
-            }
-            ?>
-            
-            <p>Posto: <?php echo htmlspecialchars($postoStr); ?></p>
-            <p>Sigillo Fiscale: <?php echo htmlspecialchars($sigilloStr); ?></p>
-            <p>Prezzo Totale: <?php echo htmlspecialchars($ticketDetails['totale'] ?? '0'); ?>€</p>
-        </div>
-        <a href="home.php">Torna alla Home</a>
+    <main class="confirmation-shell">
+        <section class="confirmation-hero card">
+            <div class="confirmation-badge">Acquisto completato</div>
+            <h1>Grazie per il tuo acquisto, <?php echo htmlspecialchars($username); ?>!</h1>
+            <p>
+                La transazione è stata registrata correttamente. Qui sotto trovi il riepilogo
+                del tuo ordine e i dettagli dei biglietti acquistati.
+            </p>
+
+            <div class="confirmation-actions">
+                <a href="home.php" class="dash-btn dash-btn-primary">Torna alla Home</a>
+                <a href="user_dashboard.php" class="dash-btn dash-btn-secondary">Vai ai miei biglietti</a>
+            </div>
+        </section>
+
+        <section class="confirmation-grid">
+            <article class="confirmation-card card">
+                <div class="section-head">
+                    <span class="section-kicker">Profilo</span>
+                    <h2>Dati utente</h2>
+                </div>
+
+                <div class="info-list">
+                    <div class="info-row">
+                        <span>Nome</span>
+                        <strong><?php echo htmlspecialchars($userDetails['nome'] ?? 'N/D'); ?></strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Cognome</span>
+                        <strong><?php echo htmlspecialchars($userDetails['cognome'] ?? 'N/D'); ?></strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Data di nascita</span>
+                        <strong><?php echo htmlspecialchars($userDetails['data_nascita'] ?? 'N/D'); ?></strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Username</span>
+                        <strong><?php echo htmlspecialchars($userDetails['username'] ?? 'N/D'); ?></strong>
+                    </div>
+                </div>
+            </article>
+
+            <article class="confirmation-card card">
+                <div class="section-head">
+                    <span class="section-kicker">Ordine</span>
+                    <h2>Dettagli acquisto</h2>
+                </div>
+
+                <div class="order-highlight">
+                    <span>Evento</span>
+                    <strong><?php echo htmlspecialchars($nomeEvento); ?></strong>
+                </div>
+
+                <div class="info-grid">
+                    <div class="mini-box">
+                        <span>Settore</span>
+                        <strong><?php echo htmlspecialchars($settore); ?></strong>
+                    </div>
+                    <div class="mini-box">
+                        <span>Biglietti</span>
+                        <strong><?php echo htmlspecialchars((string)$numeroBiglietti); ?></strong>
+                    </div>
+                    <div class="mini-box">
+                        <span>Data</span>
+                        <strong><?php echo htmlspecialchars($dataReplica ?: 'N/D'); ?></strong>
+                    </div>
+                    <div class="mini-box">
+                        <span>Ora</span>
+                        <strong><?php echo htmlspecialchars($oraReplica ?: 'N/D'); ?></strong>
+                    </div>
+                </div>
+
+                <div class="ticket-code-box">
+                    <span>Posti assegnati</span>
+                    <strong><?php echo htmlspecialchars($postoStr); ?></strong>
+                </div>
+
+                <div class="ticket-code-box">
+                    <span>Sigillo fiscale</span>
+                    <strong><?php echo htmlspecialchars($sigilloStr); ?></strong>
+                </div>
+
+                <div class="total-box">
+                    <span>Prezzo totale</span>
+                    <strong><?php echo htmlspecialchars($totale); ?>€</strong>
+                </div>
+            </article>
+        </section>
     </main>
 </body>
 </html>

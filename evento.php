@@ -426,43 +426,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
                         <p>Non ci sono più posti disponibili per questo settore.</p>
                     </div>
                 <?php else: ?>
-                    <form method="post" class="admin-card" id="ticket-app">
-                        <input type="hidden" name="azione" value="acquista">
-                        <input type="hidden" name="id_evento_settore" value="<?php echo (int)$selectedSettore['id']; ?>">
+                    <form action="checkout.php" method="post" class="admin-card" id="ticket-app">
+    <input type="hidden" name="id_evento" value="<?php echo (int)$evento['id']; ?>">
+    <input type="hidden" name="id_evento_settore" value="<?php echo (int)$selectedSettore['id']; ?>">
+    <input type="hidden" name="prezzo" value="<?php echo (float)$selectedSettore['prezzo']; ?>">
 
-                        <div class="admin-form-group">
-                            <label>Seleziona i posti</label>
-                            <div class="seat-grid">
-                                <?php for ($i = 1; $i <= (int)$selectedSettore['posti_totali']; $i++): ?>
-                                    <?php $occupato = in_array($i, $postiOccupati, true); ?>
-                                    <?php if ($occupato): ?>
-                                        <span class="seat-pill seat-occupied">P<?php echo $i; ?></span>
-                                    <?php else: ?>
-                                        <label class="seat-pill seat-available">
-                                            <input type="checkbox" name="posti[]" value="<?php echo $i; ?>" v-model="postiSelezionati">
-                                            <span>P<?php echo $i; ?></span>
-                                        </label>
-                                    <?php endif; ?>
-                                <?php endfor; ?>
-                            </div>
-                            <small class="seat-legend">Blu chiaro = disponibile · Arancione = selezionato · Grigio = occupato</small>
-                        </div>
+    <div class="admin-form-group">
+        <label>Seleziona i posti</label>
+        <div class="seat-grid">
+            <?php for ($i = 1; $i <= (int)$selectedSettore['posti_totali']; $i++): ?>
+                <?php $occupato = in_array($i, $postiOccupati, true); ?>
+                <?php if ($occupato): ?>
+                    <span class="seat-pill seat-occupied">P<?php echo $i; ?></span>
+                <?php else: ?>
+                    <label class="seat-pill seat-available">
+                        <input type="checkbox" name="posti[]" value="<?php echo $i; ?>" v-model="postiSelezionati">
+                        <span>P<?php echo $i; ?></span>
+                    </label>
+                <?php endif; ?>
+            <?php endfor; ?>
+        </div>
+        <small class="seat-legend">Blu chiaro = disponibile · Arancione = selezionato · Grigio = occupato</small>
+    </div>
 
-                        <div class="admin-form-group">
-                            <label>Prezzo per biglietto</label>
-                            <input type="text" value="€ <?php echo number_format((float)$selectedSettore['prezzo'], 2, ',', '.'); ?>" readonly>
-                        </div>
-                        <div class="admin-form-group" v-if="postiSelezionati.length > 0">
-                            <label style="color: #f39a05;">Totale Preventivo ({{ postiSelezionati.length }} biglietti)</label>
-                            <input type="text" :value="'€ ' + (postiSelezionati.length * <?php echo (float)$selectedSettore['prezzo']; ?>).toFixed(2)" readonly style="background: #fff8eb; border: 2px solid #f39a05; font-weight: bold; font-size: 1.1em; color: #13293d;">
-                        </div>
-                        <div class="admin-form-group">
-                            <label>Posti disponibili</label>
-                            <input type="text" value="<?php echo (int)$selectedSettore['posti_disponibili']; ?>" readonly>
-                        </div>
+    <div class="admin-form-group">
+        <label>Prezzo per biglietto</label>
+        <input type="text" value="€ <?php echo number_format((float)$selectedSettore['prezzo'], 2, ',', '.'); ?>" readonly>
+    </div>
 
-                        <button type="submit" class="admin-submit">Acquista biglietti</button>
-                    </form>
+    <div class="admin-form-group" v-if="postiSelezionati.length > 0">
+        <label style="color: #f39a05;">Totale Preventivo ({{ postiSelezionati.length }} biglietti)</label>
+        <input 
+            type="text"
+            :value="'€ ' + (postiSelezionati.length * <?php echo (float)$selectedSettore['prezzo']; ?>).toFixed(2)"
+            readonly
+            style="background: #fff8eb; border: 2px solid #f39a05; font-weight: bold; font-size: 1.1em; color: #13293d;"
+        >
+    </div>
+
+    <div class="admin-form-group">
+        <label>Posti disponibili</label>
+        <input type="text" value="<?php echo (int)$selectedSettore['posti_disponibili']; ?>" readonly>
+    </div>
+
+    <button type="submit" class="admin-submit">Vai al checkout</button>
+</form>
                 <?php endif; ?>
             </section>
         <?php endif; ?>
