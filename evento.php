@@ -243,7 +243,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($evento['titolo']); ?> - EasyTicket</title>
-    <link rel="stylesheet" href="css/style1.css?v=40">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/public.css">
+<link rel="stylesheet" href="css/style1.css">
+
+
     <link rel="icon" type="image/png" href="img/icn_sito_sf.png">
 </head>
 <body>
@@ -446,7 +450,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'acqui
                 <?php endif; ?>
             <?php endfor; ?>
         </div>
-        <small class="seat-legend">Blu chiaro = disponibile · Arancione = selezionato · Grigio = occupato</small>
+        <small class="seat-legend">Grigio = disponibile · Arancione = selezionato · Rosso = occupato</small>
     </div>
 
     <div class="admin-form-group">

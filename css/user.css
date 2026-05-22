@@ -169,7 +169,7 @@
 #wallet-submit-btn:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
-    background: #094d7c;
+    background: #eaeff2;
 }
 
 #wallet-submit-btn:disabled {
