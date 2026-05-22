@@ -165,13 +165,11 @@
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-
 #wallet-submit-btn:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
     background: #eaeff2;
 }
-
 #wallet-submit-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
