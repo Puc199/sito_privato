@@ -75,9 +75,8 @@ foreach ($biglietti as $biglietto) {
     <?php if ($ruolo === 2): ?>
     <section class="section-block wallet-section">
         <div class="section-heading">
-            <h2>Ciao <?php echo htmlspecialchars($utente['username']); ?>, Ricarica Wallet</h2>
+            <h2>Ciao <?php echo htmlspecialchars($utente['username']); ?>, Ricarica Wallet</h2> <br>
         </div>
-        <div class="wallet-card">
             <div class="wallet-balance">
                 <span>Il tuo credito attuale</span>
                 <strong id="wallet-display-balance">€ <?php echo number_format((float)$utente['saldo'], 2, ',', '.'); ?></strong>
@@ -108,66 +107,66 @@ foreach ($biglietti as $biglietto) {
     <?php endif; ?>
 
     <!-- Sezione Biglietti -->
-    <section class="section-block tickets-section">
-        <h2>I tuoi biglietti</h2>
-        <?php if (empty($biglietti)): ?>
-            <div class="empty-card">
-                <h3>Nessun biglietto trovato</h3>
-                <p>Non risultano ancora biglietti associati al tuo account.</p>
-                <a href="home.php" class="admin-submit" style="display: inline-block; text-decoration: none;">
-                    Vai agli eventi
-                </a>
-            </div>
-        <?php else: ?>
-            <div class="tickets-grid">
-                <?php 
-                $numeroBiglietto = 1;
-                foreach ($biglietti as $biglietto): 
-                    // Gestione immagine evento
-                    $immagineEvento = !empty($biglietto['evento_immagine']) 
-                        ? htmlspecialchars($biglietto['evento_immagine']) 
-                        : 'img/evento-default.png';
-                ?>
-                <div class="ticket-card" id="ticket-card-<?php echo $biglietto['id']; ?>">
-                    <!-- Immagine evento con numero biglietto -->
-                    <div class="ticket-image">
-                        <img src="<?php echo $immagineEvento; ?>" 
-                             alt="<?php echo htmlspecialchars($biglietto['evento_nome']); ?>">
-                        <div class="ticket-number-badge"><?php echo $numeroBiglietto; ?></div>
-                    </div>
-                    
-                    <!-- Contenuto centrale -->
-                    <div class="ticket-content">
-                        <div>
-                            <h3><?php echo htmlspecialchars($biglietto['evento_nome']); ?></h3>
-                            <div class="ticket-meta">
-                                <span>📍 <?php echo htmlspecialchars($biglietto['settore_nome']); ?></span>
-                                <span>📅 <?php echo date('d/m/Y', strtotime($biglietto['data_evento'])); ?></span>
-                                <span>🎫 Posto <?php echo htmlspecialchars($biglietto['posto']); ?></span>
-                            </div>
-                            <div class="ticket-price-new">€ <?php echo number_format($biglietto['prezzo'], 2, ',', '.'); ?></div>
+<section class="section-block tickets-section">
+    <h2>I tuoi biglietti</h2>
+    <?php if (empty($biglietti)): ?>
+        <div class="empty-card">
+            <h3>Nessun biglietto trovato</h3>
+            <p>Non risultano ancora biglietti associati al tuo account.</p>
+            <a href="home.php" class="admin-submit" style="display: inline-block; text-decoration: none;">
+                Vai agli eventi
+            </a>
+        </div>
+    <?php else: ?>
+        <div class="tickets-grid">
+            <?php 
+            $numeroBiglietto = 1;
+            foreach ($biglietti as $biglietto): 
+                $immagineEvento = !empty($biglietto['evento_immagine']) 
+                    ? htmlspecialchars($biglietto['evento_immagine']) 
+                    : 'img/evento-default.png';
+            ?>
+            <div class="ticket-card" id="ticket-card-<?php echo $biglietto['id']; ?>">
+                <!-- 1. Immagine a Sinistra -->
+                <div class="ticket-image">
+                    <img src="<?php echo $immagineEvento; ?>" 
+                         alt="<?php echo htmlspecialchars($biglietto['evento_nome']); ?>">
+                    <div class="ticket-number-badge"><?php echo $numeroBiglietto; ?></div>
+                </div>
+                
+                <!-- 2. Contenuto Centrale -->
+                <div class="ticket-content">
+                    <div class="ticket-info">
+                        <h3><?php echo htmlspecialchars($biglietto['evento_nome']); ?></h3>
+                        <div class="ticket-meta">
+                            <span>📍 <?php echo htmlspecialchars($biglietto['settore_nome']); ?></span>
+                            <span>📅 <?php echo date('d/m/Y', strtotime($biglietto['data_evento'])); ?></span>
+                            <span>🎫 Posto <?php echo htmlspecialchars($biglietto['posto']); ?></span>
                         </div>
-                        <div class="ticket-actions" onclick="event.stopPropagation();">
-                            <button
-                                type="button"
-                                class="btn-delete"
-                                onclick="event.stopPropagation(); deleteTicket(<?php echo (int)$biglietto['id']; ?>, <?php echo (float)$biglietto['prezzo']; ?>, this);">
-                                Elimina biglietto e richiedi rimborso
-                            </button>
+                        <div class="ticket-price-new">€ <?php echo number_format($biglietto['prezzo'], 2, ',', '.'); ?></div>
                     </div>
-                    
-                    <!-- QR Code -->
-                    <div class="ticket-qr">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<?php echo urlencode($biglietto['sigillo_fiscale']); ?>" 
-                             alt="QR Code">
+
+                    <!-- Bottone Elimina - Visibile SOLO in Hover -->
+                    <div class="ticket-actions-hover" onclick="event.stopPropagation();">
+                        <button type="button" class="btn-delete-hover"
+                            onclick="event.stopPropagation(); deleteTicket(<?php echo (int)$biglietto['id']; ?>, <?php echo (float)$biglietto['prezzo']; ?>, this);">
+                            Elimina biglietto e ottieni rimborso
+                        </button>
                     </div>
                 </div>
-                <?php 
-                    $numeroBiglietto++;
-                endforeach; ?>
+                
+                <!-- 3. QR Code a Destra -->
+                <div class="ticket-qr">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<?php echo urlencode($biglietto['sigillo_fiscale']); ?>" 
+                         alt="QR Code">
+                </div>
             </div>
-        <?php endif; ?>
-    </section>
+            <?php 
+                $numeroBiglietto++;
+            endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
 </main>
 
 <footer class="site-footer">

@@ -16,6 +16,8 @@ font-size: 1rem;
 color: var(--color-text-muted);
 max-width: 60ch;
 }
+
+/* Stats Grid */
 .stats-grid {
 display: grid;
 grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -49,25 +51,36 @@ font-weight: 800;
 line-height: 1;
 color: var(--color-primary);
 }
+
+/* Wallet Section */
 .wallet-section {
 margin-bottom: 2.75rem;
 }
-
+.wallet-card {
+background: linear-gradient(135deg, #ffffff 0%, #f8fbfd 100%);
+border-radius: var(--radius-lg);
+padding: 2rem;
+color: var(--color-text);
+box-shadow: var(--shadow-md);
+overflow: hidden;
+position: relative;
+border: 1px solid var(--color-border);
+}
+.wallet-card::before { display: none; }
 .wallet-card h2 {
 position: relative;
 margin: 0 0 1.25rem 0;
 font-size: 1.5rem;
-color: var(--color-text);
+color: #000000;
 }
 .wallet-balance {
 position: relative;
-background: #f2f4f5;
+background: #ffffff;
 border: 1px solid rgba(11, 95, 151, 0.18);
 border-radius: var(--radius-md);
 padding: 1.15rem 1.25rem;
 margin-bottom: 1.35rem;
-backdrop-filter: blur(6px);
-color: #ffffff;
+color: #0b75b8;
 }
 .wallet-balance span {
 display: block;
@@ -77,14 +90,14 @@ font-weight: 600;
 letter-spacing: 0.04em;
 text-transform: uppercase;
 opacity: 0.9;
-color: #0b5f97;
+color: #000000;
 }
 .wallet-balance strong {
 display: block;
 font-size: clamp(2rem, 4vw, 2.7rem);
 line-height: 1;
 font-weight: 800;
-color: #0b5f97;
+color:#0b75b8;
 }
 .wallet-form {
 position: relative;
@@ -100,7 +113,7 @@ display: block;
 margin-bottom: 0.55rem;
 font-size: 0.9rem;
 font-weight: 700;
-color: var(--color-text);
+color: #000000;
 }
 .wallet-form input {
 width: 100%;
@@ -112,7 +125,6 @@ font-size: 1rem;
 background: #ffffff;
 color: var(--color-text);
 box-sizing: border-box;
-transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .wallet-form input:focus {
 outline: none;
@@ -130,68 +142,48 @@ font-size: 0.95rem;
 font-weight: 700;
 cursor: pointer;
 transition: transform 0.2s ease, background 0.2s ease;
-
 }
 #wallet-submit-btn:hover {
 transform: translateY(-2px);
 background: linear-gradient(180deg, #f0a000 0%, var(--color-accent-dark) 100%);
+}
 
-
-}
-#wallet-submit-btn:disabled {
-opacity: 0.7;
-cursor: not-allowed;
-transform: none;
-box-shadow: none;
-}
-#wallet-feedback {
-margin-bottom: 1rem;
-padding: 0.85rem 1rem;
-border-radius: var(--radius-sm);
-font-weight: 600;
-display: none;
-font-size: 0.92rem;
-}
-#wallet-feedback.success {
-background: #e8f7ee;
-color: #1e6b3a;
-border: 1px solid #b7dfc6;
-}
-#wallet-feedback.error {
-background: #fdecea;
-color: #b42318;
-border: 1px solid #f5c2c0;
-}
+/* Sezione Biglietti - STILE "Hover" */
 .tickets-section {
 margin-top: 2.5rem;
 }
 .tickets-section h2 {
 margin: 0 0 1.35rem 0;
 font-size: clamp(1.55rem, 2.5vw, 2rem);
-line-height: 1.15;
 color: var(--color-text);
 }
 .tickets-grid {
 display: flex;
 flex-direction: column;
-gap: 1.5rem;
+gap: 1.5rem; /* Uno sotto l'altro */
 }
+
+/* Card del Biglietto */
 .ticket-card {
 background: #ffffff;
 border: 1px solid var(--color-border);
 border-radius: var(--radius-lg);
 overflow: hidden;
 box-shadow: var(--shadow-sm);
-transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-display: flex;
+transition: transform 0.2s ease, box-shadow 0.2s ease;
+display: flex; /* Layout Orizzontale */
 flex-direction: row;
-min-height: 180px;
+width: 100%;
+position: relative;
+height: 10%;
 }
 .ticket-card:hover {
 transform: translateY(-4px);
 box-shadow: var(--shadow-md);
-border-color: rgba(11, 95, 151, 0.18);
+border-color: var(--color-accent); /* Bordo arancione al passaggio */
 }
+
+/* 1. Immagine a Sinistra */
 .ticket-image {
 width: 220px;
 flex-shrink: 0;
@@ -217,19 +209,16 @@ align-items: center;
 justify-content: center;
 font-weight: 800;
 font-size: 1.1rem;
+box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
+
+/* 2. Contenuto Centrale */
 .ticket-content {
 flex: 1;
 padding: 1.4rem 1.6rem;
 display: flex;
 flex-direction: column;
 justify-content: space-between;
-}
-.ticket-content-top {
-display: flex;
-justify-content: space-between;
-align-items: flex-start;
-margin-bottom: 0.8rem;
 }
 .ticket-content h3 {
 margin: 0;
@@ -257,6 +246,44 @@ font-weight: 800;
 color: var(--color-accent);
 margin-top: 0.5rem;
 }
+
+/* Bottone Elimina - Logica Hover */
+.ticket-actions-hover {
+opacity: 0; /* Nascosto di default */
+visibility: hidden;
+transform: translateY(10px);
+transition: all 0.3s ease;
+margin-top: 1rem;
+border-top: 1px dashed #eee;
+padding-top: 1rem;
+}
+
+/* Quando passi il mouse sulla card, mostra il bottone */
+.ticket-card:hover .ticket-actions-hover {
+opacity: 1;
+visibility: visible;
+transform: translateY(0);
+}
+
+.btn-delete-hover {
+width: 100%;
+padding: 0.8rem;
+background: #fff1f2; /* Sfondo rosso chiarissimo */
+color: #c62828; /* Testo rosso */
+border: 1px solid #f3c7cb;
+border-radius: var(--radius-sm);
+font-size: 0.9rem;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.2s ease;
+}
+.btn-delete-hover:hover {
+background: #d32f2f;
+color: #ffffff;
+border-color: #d32f2f;
+}
+
+/* 3. QR Code a Destra */
 .ticket-qr {
 width: 140px;
 flex-shrink: 0;
@@ -271,94 +298,7 @@ background: #fafbfc;
 width: 100px;
 height: 100px;
 }
-.ticket-expand-hint {
-text-align: center;
-color: var(--color-primary);
-font-size: 0.84rem;
-font-weight: 700;
-padding-top: 0.9rem;
-border-top: 1px dashed var(--color-border);
-margin-top: 0.8rem;
-cursor: pointer;
-}
-.ticket-expand-hint::after {
-content: ' ▼';
-}
-.ticket-card.expanded .ticket-expand-hint::after {
-content: ' ▲';
-}
-.ticket-details {
-display: none;
-padding: 1.35rem 1.4rem 1.4rem;
-background: #f8fbfe;
-border-top: 1px solid var(--color-border);
-animation: slideDown 0.25s ease;
-width: 100%;
-}
-.ticket-details.active {
-display: block;
-}
-@keyframes slideDown {
-from {
-opacity: 0;
-transform: translateY(-8px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
-}
-}
-.detail-row {
-display: flex;
-justify-content: space-between;
-gap: 1rem;
-padding: 0.8rem 0;
-border-bottom: 1px solid #e5edf3;
-font-size: 0.92rem;
-}
-.detail-row:last-child {
-border-bottom: none;
-}
-.detail-label {
-color: var(--color-text-muted);
-font-weight: 600;
-}
-.detail-value {
-color: var(--color-text);
-font-weight: 700;
-text-align: right;
-}
-.sigillo {
-font-family: monospace;
-font-size: 0.8rem;
-word-break: break-word;
-}
-.ticket-actions {
-margin-top: 1.25rem;
-padding-top: 1.15rem;
-border-top: 1px solid var(--color-border);
-}
-.btn-delete {
-width: 100%;
-padding: 0.95rem 1rem;
-background: #fff1f2;
-color: #c62828;
-border: 1px solid #f3c7cb;
-border-radius: var(--radius-sm);
-font-size: 0.95rem;
-font-weight: 700;
-cursor: pointer;
-transition: all 0.2s ease;
-}
-.btn-delete:hover {
-background: #d32f2f;
-border-color: #d32f2f;
-color: #ffffff;
-}
-.btn-delete:disabled {
-opacity: 0.65;
-cursor: not-allowed;
-}
+
 .empty-card {
 text-align: center;
 padding: 3.2rem 1.5rem;
@@ -366,31 +306,21 @@ background: #f8fbfd;
 border: 2px dashed var(--color-border);
 border-radius: var(--radius-lg);
 }
-.empty-card h3 {
-margin: 0 0 0.7rem 0;
-font-size: 1.45rem;
-color: var(--color-text);
-}
-.empty-card p {
-margin: 0 0 1.3rem 0;
-color: var(--color-text-muted);
-}
+.empty-card h3 { margin: 0 0 0.7rem 0; font-size: 1.45rem; color: var(--color-text); }
+.empty-card p { margin: 0 0 1.3rem 0; color: var(--color-text-muted); }
+
+/* Responsive per Mobile */
 @media (max-width: 768px) {
-.stats-grid {
-grid-template-columns: 1fr;
-}
-.wallet-card {
-    padding: 1.4rem;
-}
-.wallet-balance strong {
-    font-size: 2.1rem;
-}
+.stats-grid { grid-template-columns: 1fr; }
+.wallet-card { padding: 1.4rem; }
+.wallet-balance strong { font-size: 2.1rem; }
+
 .ticket-card {
-    flex-direction: column;
+    flex-direction: column; /* Su mobile torna a impilarsi verticalmente */
 }
 .ticket-image {
     width: 100%;
-    height: 180px;
+    height: 200px;
 }
 .ticket-qr {
     width: 100%;
@@ -398,33 +328,9 @@ grid-template-columns: 1fr;
     border-top: 2px dashed var(--color-border);
     padding: 1rem;
 }
-.ticket-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.55rem;
-}
-}
-@media (max-width: 640px) {
-.dashboard-welcome {
-margin-bottom: 1.5rem;
-}
-.stat-card,
-.ticket-content,
-.ticket-details {
-    padding: 1.1rem;
-}
-.wallet-form {
-    padding: 1rem;
-}
-.ticket-content-top,
-.detail-row {
-    flex-direction: column;
-    align-items: flex-start;
-}
-.detail-value {
-    text-align: left;
-}
-.stat-card .stat-value {
-    font-size: 1.8rem;
+.ticket-actions-hover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 }

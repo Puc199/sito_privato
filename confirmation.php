@@ -19,7 +19,7 @@ if ($username === '') {
 $ticketDetails = $_SESSION['ticket_info'] ?? [];
 
 if (empty($ticketDetails) || !is_array($ticketDetails)) {
-    header("Location: home.php");
+    header("Location: user_dashboard.php");
     exit();
 }
 
